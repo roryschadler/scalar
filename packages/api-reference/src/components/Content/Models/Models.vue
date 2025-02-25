@@ -75,7 +75,9 @@ const models = computed(() => {
               <Schema
                 :hideHeading="true"
                 noncollapsible
-                :value="(schemas as any)[name]" />
+                :discriminator="(schemas as any)[name]?.allOf"
+                :value="(schemas as any)[name]"
+                :schemas="schemas" />
             </ScalarErrorBoundary>
           </CompactSection>
         </Lazy>

@@ -23,6 +23,10 @@ const flattenDefaultValue = (value: Record<string, any>) => {
     ? value.default[0]
     : value?.default
 }
+
+// Humanize the discriminator name e.g. oneOf -> one of
+const humanizedDiscriminator = (discriminator: string) =>
+  discriminator.replace(/([A-Z])/g, ' $1').trim()
 </script>
 <template>
   <div class="property-heading">
@@ -145,7 +149,10 @@ const flattenDefaultValue = (value: Record<string, any>) => {
       :key="discriminator">
       <!-- Only show anyOf, oneOf, allOf if there are more than one schema -->
       <template v-if="value?.[discriminator]?.length > 1">
-        <Badge>{{ discriminator }}</Badge>
+        <div
+          class="m-0 flex w-full rounded-t-lg border border-b-0 px-3 py-2 capitalize">
+          {{ humanizedDiscriminator(discriminator) }}
+        </div>
       </template>
     </template>
     <div

@@ -17,15 +17,25 @@ const props = withDefaults(
       | OpenAPIV3_1.SchemaObject
       | OpenAPIV3_1.ArraySchemaObject
       | OpenAPIV3_1.NonArraySchemaObject
+    schemas?:
+      | OpenAPIV2.DefinitionsObject
+      | Record<string, OpenAPIV3.SchemaObject>
+      | Record<string, OpenAPIV3_1.SchemaObject>
+      | unknown
     /** Track how deep we’ve gone */
     level?: number
-    /* Show as a heading */
+    /** Show as a heading */
     name?: string
+    /** The description of the schema */
+    description?: string
     /** A tighter layout with less borders and without a heading */
     compact?: boolean
     /** Shows a toggle to hide/show children */
     noncollapsible?: boolean
+    /** Hide the heading */
     hideHeading?: boolean
+    /** Whether to show the discriminator */
+    discriminator?: boolean
   }>(),
   { level: 0 },
 )
@@ -47,19 +57,34 @@ const handleClick = (e: MouseEvent) =>
     <div
       class="schema-card"
       :class="[
-        `schema-card--level-${level}`,
+        {
+          'schema-card--level-0': discriminator,
+          [`schema-card--level-${level}`]: !discriminator,
+        },
         { 'schema-card--compact': compact, 'schema-card--open': open },
       ]">
       <div
-        v-if="value?.description && typeof value.description === 'string'"
+        v-if="
+          value?.description &&
+          typeof value.description === 'string' &&
+          !value.allOf?.length
+        "
         class="schema-card-description">
         <ScalarMarkdown :value="value.description" />
       </div>
       <div
+        v-if="description"
+        class="schema-card-description">
+        <ScalarMarkdown :value="description" />
+      </div>
+      <div
         class="schema-properties"
-        :class="{ 'schema-properties-open': open }">
+        :class="{
+          'schema-properties-open': open,
+          'border-0': discriminator,
+        }">
         <DisclosureButton
-          v-show="!hideHeading && !(noncollapsible && compact)"
+          v-show="!hideHeading && !(noncollapsible && !compact)"
           :as="noncollapsible ? 'div' : 'button'"
           class="schema-card-title"
           :class="{ 'schema-card-title--compact': compact }"
@@ -88,8 +113,9 @@ const handleClick = (e: MouseEvent) =>
               :class="{ 'schema-card-title-icon--open': open }"
               icon="Add"
               size="sm" />
+            {{ schemas }}
             <SchemaHeading
-              :name="(value?.title ?? name) as string"
+              :name="name"
               :value="value" />
           </template>
         </DisclosureButton>
@@ -107,6 +133,8 @@ const handleClick = (e: MouseEvent) =>
                 :compact="compact"
                 :level="level"
                 :name="property"
+                :description="description"
+                :discriminator="discriminator"
                 :required="
                   value.required?.includes(property) ||
                   value.properties?.[property]?.required === true
@@ -159,7 +187,9 @@ const handleClick = (e: MouseEvent) =>
               :compact="compact"
               :level="level"
               :name="(value as OpenAPIV2.SchemaObject).name"
-              :value="value" />
+              :value="value"
+              :schemas="schemas"
+              :discriminator="discriminator" />
           </template>
         </DisclosurePanel>
       </div>

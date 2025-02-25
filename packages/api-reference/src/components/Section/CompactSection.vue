@@ -56,8 +56,10 @@ watch(
 </template>
 <style scoped>
 .collapsible-section {
-  border-top: var(--scalar-border-width) solid var(--scalar-border-color);
   position: relative;
+}
+.collapsible-section:not(:first-of-type) {
+  border-top: var(--scalar-border-width) solid var(--scalar-border-color);
 }
 .collapsible-section-header {
   color: var(--scalar-color-1);

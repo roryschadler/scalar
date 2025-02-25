@@ -47,5 +47,6 @@ defineProps<{
 .schema-type {
   font-family: var(--scalar-font-code);
   color: var(--scalar-color-1);
+  user-select: none;
 }
 </style>

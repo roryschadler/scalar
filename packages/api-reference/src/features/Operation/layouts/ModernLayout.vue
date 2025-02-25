@@ -5,6 +5,7 @@ import type {
   Operation,
   Server,
 } from '@scalar/oas-utils/entities/spec'
+import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from '@scalar/openapi-types'
 import type { TransformedOperation } from '@scalar/types/legacy'
 import { defineProps } from 'vue'
 
@@ -37,6 +38,11 @@ defineProps<{
   operation: Operation
   /** @deprecated Use `operation` instead */
   transformedOperation: TransformedOperation
+  schemas:
+    | OpenAPIV2.DefinitionsObject
+    | Record<string, OpenAPIV3.SchemaObject>
+    | Record<string, OpenAPIV3_1.SchemaObject>
+    | unknown
 }>()
 </script>
 <template>
@@ -65,7 +71,9 @@ defineProps<{
             <ScalarMarkdown
               :value="operation.description"
               withImages />
-            <OperationParameters :operation="operation" />
+            <OperationParameters
+              :operation="operation"
+              :schemas="schemas" />
             <OperationResponses :operation="transformedOperation" />
           </div>
         </SectionColumn>

@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { ScalarMarkdown } from '@scalar/components'
+import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from '@scalar/openapi-types'
 import type { ContentType, RequestBody } from '@scalar/types/legacy'
 import { computed, ref } from 'vue'
 
 import { Schema } from '@/components/Content/Schema'
 
-const { requestBody } = defineProps<{ requestBody?: RequestBody }>()
+const { schemas, requestBody } = defineProps<{
+  schemas?:
+    | OpenAPIV2.DefinitionsObject
+    | Record<string, OpenAPIV3.SchemaObject>
+    | Record<string, OpenAPIV3_1.SchemaObject>
+    | unknown
+  requestBody?: RequestBody
+}>()
 
 const availableContentTypes = computed(() =>
   Object.keys(requestBody?.content ?? {}),
@@ -40,11 +48,6 @@ if (requestBody?.content) {
           </option>
         </select>
       </div>
-      <div
-        v-if="requestBody.description"
-        class="request-body-description">
-        <ScalarMarkdown :value="requestBody.description" />
-      </div>
     </div>
     <div
       v-if="requestBody.content?.[selectedContentType]"
@@ -52,7 +55,9 @@ if (requestBody?.content) {
       <Schema
         compact
         noncollapsible
-        :value="requestBody.content?.[selectedContentType]?.schema" />
+        :value="requestBody.content?.[selectedContentType]?.schema"
+        :schemas="schemas"
+        :description="requestBody.description" />
     </div>
   </div>
 </template>
@@ -123,14 +128,6 @@ if (requestBody?.content) {
 }
 .request-body-title-select:hover {
   color: var(--scalar-color-1);
-}
-.request-body-description {
-  margin-top: 6px;
-  font-size: var(--scalar-small);
-  width: 100%;
-}
-.request-body-description :deep(.markdown) * {
-  color: var(--scalar-color-2) !important;
 }
 @media (max-width: 460px) {
   .request-body-title-select {

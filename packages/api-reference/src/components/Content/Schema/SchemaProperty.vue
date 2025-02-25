@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { ScalarIcon, ScalarMarkdown } from '@scalar/components'
+import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from '@scalar/openapi-types'
 import { computed } from 'vue'
 
 import { formatExample } from '@/components/Content/Schema/helpers/formatExample'
@@ -8,6 +9,7 @@ import {
   discriminators,
   optimizeValueForDisplay,
 } from '@/components/Content/Schema/helpers/optimizeValueForDisplay'
+import ScreenReader from '@/components/ScreenReader.vue'
 
 import Schema from './Schema.vue'
 import SchemaPropertyHeading from './SchemaPropertyHeading.vue'
@@ -30,6 +32,12 @@ const props = withDefaults(
     additional?: boolean
     pattern?: boolean
     withExamples?: boolean
+    discriminator?: boolean
+    schemas?:
+      | OpenAPIV2.DefinitionsObject
+      | Record<string, OpenAPIV3.SchemaObject>
+      | Record<string, OpenAPIV3_1.SchemaObject>
+      | unknown
   }>(),
   {
     level: 0,
@@ -129,13 +137,82 @@ const discriminatorType = discriminators.find((r) => {
       r in optimizedValue.value.items)
   )
 })
+
+const getSchemaName = (value?: Record<string, any>) => {
+  if (!value || !props.schemas) return null
+
+  // Find exact match
+  const exactMatch = Object.entries(props.schemas as Record<string, any>).find(
+    ([_, schema]) => {
+      // Compare without description field as it might be in different places
+      const valueWithoutDesc = { ...value }
+      const schemaWithoutDesc = { ...schema }
+      delete valueWithoutDesc.description
+      delete schemaWithoutDesc.description
+
+      return (
+        JSON.stringify(valueWithoutDesc) === JSON.stringify(schemaWithoutDesc)
+      )
+    },
+  )?.[0]
+
+  if (exactMatch) return exactMatch
+
+  // Find match within allOf arrays
+  const schemaWithAllOf = Object.entries(
+    props.schemas as Record<string, any>,
+  ).find(([_, schema]) => {
+    if (!schema.allOf) return false
+    return schema.allOf.some((part: any) => {
+      const partWithoutDesc = { ...part }
+      const valueWithoutDesc = { ...value }
+      delete partWithoutDesc.description
+      delete valueWithoutDesc.description
+      return (
+        JSON.stringify(partWithoutDesc) === JSON.stringify(valueWithoutDesc)
+      )
+    })
+  })?.[0]
+
+  if (schemaWithAllOf) return schemaWithAllOf
+
+  // Find partial match by comparing properties structure
+  const partialMatch = Object.entries(
+    props.schemas as Record<string, any>,
+  ).find(([_, schema]) => {
+    if (!value.properties || !schema.properties) return false
+    return (
+      JSON.stringify(value.properties) === JSON.stringify(schema.properties)
+    )
+  })?.[0]
+
+  return partialMatch || null
+}
+
+const schemaName = computed(() => {
+  // Handle direct schema
+  const directName = getSchemaName(optimizedValue.value)
+  if (directName) return directName
+
+  // Handle discriminators
+  for (const discriminator of discriminators) {
+    if (optimizedValue.value?.[discriminator]) {
+      const discriminatorName = getSchemaName(
+        optimizedValue.value[discriminator],
+      )
+      if (discriminatorName) return discriminatorName
+    }
+  }
+
+  return null
+})
 </script>
 <template>
   <div
-    class="property"
     :class="[
-      `property--level-${level}`,
       {
+        'property--level-0': discriminator,
+        [`property--level-${level} property`]: !discriminator,
         'property--compact': compact,
         'property--deprecated': optimizedValue?.deprecated,
       },
@@ -300,18 +377,35 @@ const discriminatorType = discriminators.find((r) => {
       <!-- Property -->
       <div
         v-if="optimizedValue?.[discriminator]"
-        class="property-rule">
+        class="property-rule mt-0 gap-0 divide-y rounded-t-none border pl-[26px] pr-3">
         <template
           v-for="schema in optimizedValue[discriminator]"
           :key="schema.id">
-          <Schema
-            :compact="compact"
-            :level="level + 1"
-            :noncollapsible="
-              Array.isArray(optimizedValue?.[discriminator]) &&
-              optimizedValue?.[discriminator].length === 1
-            "
-            :value="schema" />
+          <Disclosure
+            v-slot="{ open }"
+            :defaultOpen="true">
+            <DisclosureButton class="group/schema relative">
+              <ScalarIcon
+                class="text-c-3 w-4.5 group-hover/schema:text-c-1 absolute left-[-19px] top-2.5 size-[18px]"
+                :icon="open ? 'ChevronDown' : 'ChevronRight'"
+                thickness="1.5" />
+              <ScreenReader>
+                {{ open ? 'Collapse' : 'Expand' }}
+              </ScreenReader>
+              <span class="flex py-3">{{ getSchemaName(schema) }}</span>
+            </DisclosureButton>
+            <DisclosurePanel
+              class="schema-panel"
+              :class="{ '!border-t-0': open }">
+              <Schema
+                :name="getSchemaName(schema) ?? undefined"
+                :compact="compact"
+                :level="level + 1"
+                :noncollapsible="true"
+                :discriminator="true"
+                :value="schema" />
+            </DisclosurePanel>
+          </Disclosure>
         </template>
       </div>
       <!-- Arrays -->

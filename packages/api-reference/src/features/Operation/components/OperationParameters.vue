@@ -1,11 +1,17 @@
 <script setup lang="ts">
 import type { Request as RequestEntity } from '@scalar/oas-utils/entities/spec'
+import type { OpenAPIV2, OpenAPIV3, OpenAPIV3_1 } from '@scalar/openapi-types'
 
 import ParameterList from './ParameterList.vue'
 import RequestBody from './RequestBody.vue'
 
 const props = defineProps<{
   operation?: Pick<RequestEntity, 'parameters' | 'requestBody'>
+  schemas?:
+    | OpenAPIV2.DefinitionsObject
+    | Record<string, OpenAPIV3.SchemaObject>
+    | Record<string, OpenAPIV3_1.SchemaObject>
+    | unknown
 }>()
 
 const filterParameters = (where: 'path' | 'query' | 'header' | 'cookie') =>
@@ -36,7 +42,8 @@ const filterParameters = (where: 'path' | 'query' | 'header' | 'cookie') =>
   <!-- Request body -->
   <RequestBody
     v-if="operation?.requestBody"
-    :requestBody="operation.requestBody">
+    :requestBody="operation.requestBody"
+    :schemas="schemas">
     <template #title>Body</template>
   </RequestBody>
 </template>
