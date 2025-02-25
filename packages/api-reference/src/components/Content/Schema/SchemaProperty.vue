@@ -72,6 +72,14 @@ const displayDescription = (
     return null
   }
 
+  if (value?.allOf) {
+    return null
+  }
+
+  if (value?.anyOf) {
+    return null
+  }
+
   return description || value?.description || null
 }
 
