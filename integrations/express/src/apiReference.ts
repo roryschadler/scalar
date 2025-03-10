@@ -103,14 +103,14 @@ export const customTheme = `
 `
 
 /**
- * The default configuration for the API Reference.
+ * The default configuration for the API Reference
  */
 const DEFAULT_CONFIGURATION: Partial<ApiReferenceConfiguration> = {
   _integration: 'express',
 }
 
 /**
- * The route handler to render the Scalar API Reference.
+ * The route handler to render the Scalar API Reference
  */
 export function apiReference(givenConfiguration: Partial<ApiReferenceConfiguration>) {
   // Merge the defaults

@@ -531,6 +531,9 @@ importers:
 
   integrations/nestjs:
     dependencies:
+      '@scalar/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@scalar/types':
         specifier: workspace:*
         version: link:../../packages/types
@@ -538,6 +541,9 @@ importers:
       '@scalar/api-reference':
         specifier: workspace:*
         version: link:../../packages/api-reference
+      '@scalar/build-tooling':
+        specifier: workspace:*
+        version: link:../../packages/build-tooling
       '@types/express':
         specifier: ^4.17.21
         version: 4.17.21

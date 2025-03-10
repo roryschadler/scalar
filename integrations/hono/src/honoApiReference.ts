@@ -4,7 +4,7 @@ import type { Env, MiddlewareHandler } from 'hono'
 import type { ApiReferenceConfiguration } from './types.ts'
 
 /**
- * The default configuration for the API Reference.
+ * The default configuration for the API Reference
  */
 const DEFAULT_CONFIGURATION: Partial<ApiReferenceConfiguration> = {
   _integration: 'hono',
@@ -116,7 +116,7 @@ export const customTheme = `
 `
 
 /**
- * The Hono middleware for the Scalar API Reference.
+ * The Hono middleware for the Scalar API Reference
  */
 export const apiReference = <E extends Env>(
   givenConfiguration: Partial<ApiReferenceConfiguration>,

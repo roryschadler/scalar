@@ -1,21 +1,20 @@
-import type { ReferenceConfiguration } from '@scalar/types/legacy'
+import type { ServerResponse } from 'node:http'
+import { getHtmlDocument } from '@scalar/core/libs/html-rendering'
 import type { Request, Response } from 'express'
 import type { FastifyRequest } from 'fastify'
-import type { ServerResponse } from 'node:http'
+import type { ApiReferenceConfiguration } from './types.ts'
 
-export type NestJSReferenceConfiguration = ReferenceConfiguration & {
-  withFastify?: boolean
-  cdn?: string
-}
-
-export type ApiReferenceOptions = ReferenceConfiguration & {
-  cdn?: string
+/**
+ * The default configuration for the API Reference
+ */
+const DEFAULT_CONFIGURATION: Partial<ApiReferenceConfiguration> = {
+  _integration: 'nestjs',
 }
 
 /**
- * The custom theme CSS for the API Reference.
+ * The custom theme for NestJS
  */
-export const customThemeCSS = `
+export const customTheme = `
 /* basic theme */
 .light-mode {
   --scalar-color-1: #2a2f45;
@@ -85,61 +84,28 @@ export const customThemeCSS = `
 `
 
 /**
- * The HTML to load the @scalar/api-reference package.
+ * The NestJS plugin for the Scalar API Reference
  */
-export const ApiReference = (options: ApiReferenceOptions) => {
+export function apiReference(givenConfiguration: Partial<ApiReferenceConfiguration>) {
+  // Merge the defaults
   const configuration = {
-    _integration: 'nestjs',
-    ...options,
+    ...DEFAULT_CONFIGURATION,
+    ...givenConfiguration,
   }
 
-  return `
-    <script
-      id="api-reference"
-      type="application/json"
-      data-configuration="${JSON.stringify(configuration).split('"').join('&quot;')}">${
-        configuration.spec?.content
-          ? typeof configuration.spec?.content === 'function'
-            ? JSON.stringify(configuration.spec?.content())
-            : JSON.stringify(configuration.spec?.content)
-          : ''
-      }</script>
-    <script src="${configuration.cdn || 'https://cdn.jsdelivr.net/npm/@scalar/api-reference'}"></script>
-  `
-}
+  const html = getHtmlDocument(configuration, customTheme)
 
-/**
- * The HTML template to render the API Reference.
- */
-export function apiReference(options: NestJSReferenceConfiguration) {
-  const content = `
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>Scalar API Reference</title>
-        <meta charset="utf-8" />
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1" />
-        <style>
-          ${options.theme ? null : customThemeCSS}
-        </style>
-      </head>
-      <body>
-        ${ApiReference(options)}
-      </body>
-    </html>
-  `
-
-  if (options.withFastify) {
-    return (_req: FastifyRequest, res: ServerResponse) => {
+  // Use Fastify to respond with the HTML document
+  if (configuration.withFastify) {
+    return (_: FastifyRequest, res: ServerResponse) => {
       res.writeHead(200, { 'Content-Type': 'text/html' })
-      res.write(content)
+      res.write(html)
       res.end()
     }
   }
 
-  return (_req: Request, res: Response) => {
-    res.send(content)
+  // Use Express to respond with the HTML document
+  return (_: Request, res: Response) => {
+    res.type('text/html').send(html)
   }
 }

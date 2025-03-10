@@ -1,1 +1,1 @@
-export * from './nestJSApiReference'
+export * from './nestJSApiReference.ts'
