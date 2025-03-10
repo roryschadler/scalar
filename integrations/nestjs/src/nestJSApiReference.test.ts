@@ -137,7 +137,7 @@ function createFastify() {
   let sentHtml = ''
   let headers: Record<string, string> = {}
   const mockRes = {
-    writeHead: (status: number, responseHeaders: Record<string, string>) => {
+    writeHead: (_: number, responseHeaders: Record<string, string>) => {
       headers = responseHeaders
     },
     write: (html: string) => {
