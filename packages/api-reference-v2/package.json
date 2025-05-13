@@ -34,7 +34,10 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "CHANGELOG.md"],
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
   "module": "./dist/index.js",
   "dependencies": {
     "nanoid": "catalog:*",
