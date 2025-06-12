@@ -220,6 +220,20 @@ const shouldRenderArrayItemComposition = (composition: string): boolean => {
 }
 
 const shouldRenderArrayOfObjects = computed(() => hasComplexArrayItems.value)
+
+/** Determines if enum descriptions should be displayed */
+const shouldShowEnumDescriptions = computed(() => {
+  if (!optimizedValue.value) {
+    return false
+  }
+
+  // Check if x-enumDescriptions is an object and not an array
+  return (
+    optimizedValue.value['x-enumDescriptions'] &&
+    typeof optimizedValue.value['x-enumDescriptions'] === 'object' &&
+    !Array.isArray(optimizedValue.value['x-enumDescriptions'])
+  )
+})
 </script>
 <template>
   <component
@@ -279,12 +293,7 @@ const shouldRenderArrayOfObjects = computed(() => hasComplexArrayItems.value)
     <div
       v-if="getEnumFromValue(optimizedValue)?.length > 0 && !isDiscriminator"
       class="property-enum">
-      <template
-        v-if="
-          optimizedValue?.['x-enumDescriptions'] &&
-          typeof optimizedValue?.['x-enumDescriptions'] === 'object' &&
-          !Array.isArray(optimizedValue?.['x-enumDescriptions'])
-        ">
+      <template v-if="shouldShowEnumDescriptions">
         <div class="property-list">
           <div
             v-for="enumValue in getEnumFromValue(optimizedValue)"
@@ -297,7 +306,7 @@ const shouldRenderArrayOfObjects = computed(() => hasComplexArrayItems.value)
             </div>
             <div class="property-description">
               <ScalarMarkdown
-                :value="optimizedValue['x-enumDescriptions'][enumValue]" />
+                :value="optimizedValue?.['x-enumDescriptions']?.[enumValue]" />
             </div>
           </div>
         </div>
