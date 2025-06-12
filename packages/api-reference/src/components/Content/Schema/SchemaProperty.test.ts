@@ -391,6 +391,25 @@ describe('SchemaProperty sub-schema', () => {
     expect(wrapper.html()).toContain('foo (1)')
     expect(wrapper.html()).toContain('bar (1)')
   })
+
+  it('displays enum descriptions when x-enumDescriptions is provided', () => {
+    const wrapper = mount(SchemaProperty, {
+      props: {
+        value: {
+          type: 'string',
+          enum: ['Ice giant', 'Dwarf', 'Gas', 'Iron'],
+          title: 'Planet',
+          description: 'The type of planet',
+          'x-enumDescriptions': {
+            'Ice giant': 'A planet with a thick atmosphere of water, methane, and ammonia ice',
+          },
+        },
+      },
+    })
+
+    expect(wrapper.html()).toContain('Ice giant')
+    expect(wrapper.html()).toContain('A planet with a thick atmosphere of water, methane, and ammonia ice')
+  })
 })
 
 describe('SchemaProperty discriminator handling', () => {
