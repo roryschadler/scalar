@@ -18,6 +18,7 @@ const {
   required = false,
   withExamples = true,
   hideModelNames = false,
+  recursive = false,
 } = defineProps<{
   value?: Record<string, any>
   enum?: boolean
@@ -27,6 +28,7 @@ const {
   withExamples?: boolean
   hideModelNames?: boolean
   schemas?: Schemas
+  recursive?: boolean
 }>()
 
 const flattenDefaultValue = (value: Record<string, any>) => {
@@ -72,6 +74,10 @@ const displayType = computed(() => {
     return value.type.join(' | ')
   }
 
+  if (value?.$ref) {
+    return value.$ref.split('/').pop()
+  }
+
   if (value?.title) {
     return value.title
   }
@@ -114,7 +120,7 @@ const modelName = computed(() => {
       Discriminator
     </div>
     <template v-if="value">
-      <SchemaPropertyDetail v-if="value?.type">
+      <SchemaPropertyDetail v-if="value?.type || value?.$ref">
         <ScreenReader>Type:</ScreenReader>
         <template v-if="modelName">
           {{ modelName }}
@@ -228,6 +234,11 @@ const modelName = computed(() => {
       class="property-required">
       required
     </div>
+    <div
+      v-if="recursive"
+      class="property-recursive">
+      recursive
+    </div>
     <!-- examples -->
     <SchemaPropertyExamples
       v-if="withExamples"
@@ -282,6 +293,11 @@ const modelName = computed(() => {
 .property-required {
   font-size: var(--scalar-micro);
   color: var(--scalar-color-orange);
+}
+
+.property-recursive {
+  font-size: var(--scalar-micro);
+  color: var(--scalar-color-purple);
 }
 
 .property-read-only {

@@ -9,10 +9,8 @@ import type { OpenAPIV3_1 } from '@scalar/openapi-types'
 import { computed, ref } from 'vue'
 
 import { mergeAllOfSchemas } from '@/components/Content/Schema/helpers/merge-all-of-schemas'
-import {
-  getCompositionDisplay,
-  getModelNameFromSchema,
-} from '@/components/Content/Schema/helpers/schema-name'
+import { getModelNameFromSchema } from '@/components/Content/Schema/helpers/schema-name'
+import SchemaPropertyHeading from '@/components/Content/Schema/SchemaPropertyHeading.vue'
 import type { Schemas } from '@/features/Operation/types/schemas'
 
 import {
@@ -236,6 +234,14 @@ const shouldRenderSchema = computed(() => {
                 }
               : compositionSchema
           " />
+        <div
+          v-if="compositionSchema?.isCircular"
+          class="rounded-b-lg border px-2 py-1.5">
+          <SchemaPropertyHeading
+            :value="compositionSchema"
+            :schemas="schemas"
+            :recursive="compositionSchema?.isCircular" />
+        </div>
         <!-- Nested tabs -->
         <template v-if="compositionSchema?.oneOf || compositionSchema?.anyOf">
           <SchemaComposition
