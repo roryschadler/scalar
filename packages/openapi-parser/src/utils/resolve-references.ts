@@ -6,6 +6,7 @@ import { getEntrypoint } from './get-entrypoint'
 import { getSegmentsFromPath } from './get-segments-from-path'
 import { isObject } from './is-object'
 import { makeFilesystem } from './make-filesystem'
+import { CircularReferenceTracker } from './circular-reference-tracker'
 
 // TODO: Add support for all pointer words
 // export const pointerWords = new Set([
@@ -30,6 +31,12 @@ export type ResolveReferencesOptions = ThrowOnErrorOption & {
    * Note that for object schemas, its properties may not be dereferenced when the hook is called.
    */
   onDereference?: (data: { schema: AnyObject; ref: string }) => void
+  /**
+   * Handle circular references mode
+   * - `mark` (default): Mark circular references with isCircular but continue resolving
+   * - `break`: Break resolution on circular references to prevent infinite recursion
+   */
+  circularReferenceMode?: 'mark' | 'break'
 }
 
 /**
@@ -70,7 +77,15 @@ export function resolveReferences(
   }
 
   // Recursively resolve all references
-  dereference(finalInput, filesystem, file ?? entrypoint, new WeakSet(), errors, options)
+  dereference(
+    finalInput,
+    filesystem,
+    file ?? entrypoint,
+    new WeakSet(),
+    errors,
+    options,
+    new CircularReferenceTracker(),
+  )
 
   // Remove duplicats (according to message) from errors
   errors = errors.filter(
@@ -98,6 +113,7 @@ function dereference(
   errors: ErrorObject[],
 
   options?: ResolveReferencesOptions,
+  tracker?: CircularReferenceTracker,
 ): void {
   if (schema === null || resolvedSchemas.has(schema)) {
     return
@@ -105,39 +121,59 @@ function dereference(
   resolvedSchemas.add(schema)
 
   function resolveExternal(externalFile: FilesystemEntry) {
-    dereference(externalFile.specification, filesystem, externalFile, resolvedSchemas, errors, options)
-
+    dereference(externalFile.specification, filesystem, externalFile, resolvedSchemas, errors, options, tracker)
     return externalFile
   }
 
   while (schema.$ref !== undefined) {
     // Find the referenced content
-    const resolved = resolveUri(schema.$ref, options, entrypoint, filesystem, resolveExternal, errors)
+    const ref = schema.$ref
 
-    // invalid
-    if (typeof resolved !== 'object' || resolved === null) {
-      break
-    }
-    const dereferencedRef = schema.$ref
+    // Check for circular reference before entering
+    const isCircular = tracker?.enter(ref) ?? false
 
-    // Get rid of the reference
-    delete schema.$ref
+    try {
+      const resolved = resolveUri(ref, options, entrypoint, filesystem, resolveExternal, errors)
 
-    for (const key of Object.keys(resolved)) {
-      if (schema[key] === undefined) {
-        schema[key] = resolved[key]
+      // invalid
+      if (typeof resolved !== 'object' || resolved === null) {
+        break
       }
-    }
 
-    if (dereferencedRef) {
-      options?.onDereference?.({ schema, ref: dereferencedRef })
+      // If this is a circular reference, mark it but preserve the $ref for UI
+      if (isCircular) {
+        schema.isCircular = true
+
+        // If we're using 'break' mode, stop here to prevent infinite recursion
+        if (options?.circularReferenceMode === 'break') {
+          break
+        }
+      } else {
+        // Only remove $ref if it's not circular, so UI can still access it
+        delete schema.$ref
+      }
+
+      for (const key of Object.keys(resolved)) {
+        if (schema[key] === undefined) {
+          schema[key] = resolved[key]
+        }
+      }
+
+      if (ref) {
+        options?.onDereference?.({ schema, ref })
+      }
+
+      // In 'mark' mode, we continue resolving even with circular references
+      // The isCircular flag will be used by the UI to handle display appropriately
+    } finally {
+      tracker?.exit()
     }
   }
 
   // Iterate over the whole object
   for (const value of Object.values(schema)) {
     if (typeof value === 'object' && value !== null) {
-      dereference(value, filesystem, entrypoint, resolvedSchemas, errors, options)
+      dereference(value, filesystem, entrypoint, resolvedSchemas, errors, options, tracker)
     }
   }
 }

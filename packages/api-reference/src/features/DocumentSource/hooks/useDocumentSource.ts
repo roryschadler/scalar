@@ -97,7 +97,9 @@ export function useDocumentSource({
 
       // Dereference
       const schema = await measure('dereference', async () => {
-        const { schema, errors } = await dereference(upgraded)
+        const { schema, errors } = await dereference(upgraded, {
+          circularReferenceMode: 'break',
+        })
 
         // Error handling
         if (errors?.length) {
