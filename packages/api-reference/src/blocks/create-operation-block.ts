@@ -1,5 +1,5 @@
 import type { WorkspaceStore } from '@scalar/workspace-store/client'
-import { createApp } from 'vue'
+import { createApp, h } from 'vue'
 import OperationBlock from './components/OperationBlock.vue'
 
 export type OperationBlockConfiguration = {
@@ -21,7 +21,7 @@ export function createOperationBlock(
   }
 
   // Mount Vue App
-  const app = createApp(OperationBlock, configuration)
+  const app = createApp(() => h(OperationBlock, configuration))
 
   app.mount(element)
 }

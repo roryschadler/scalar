@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { WorkspaceStore } from '@scalar/workspace-store/client'
 
-import { Operation } from '@/features/Operation'
+// import { Operation } from '@/features/Operation'
 
 /**
  * This component should stay lean and do the minimum amount of work to
@@ -15,9 +15,20 @@ defineProps<{
 </script>
 
 <template>
-  <div>OperationBlock: ✅</div>
-  <div>OpenAPI document: {{ store.workspace.documents[document] }}</div>
-  <div>document: {{ document }}</div>
-  <div>pointer: {{ pointer }}</div>
-  <div>&lt;Operation/&gt;: <Operation /></div>
+  <div class="debug">
+    <h2>&lt;OperationBlock/&gt;</h2>
+    <div><strong>OpenAPI document:</strong></div>
+    <pre><code>{{ JSON.stringify(store.workspace.documents[document], null, 2) }}</code></pre>
+    <div><strong>Pointer:</strong></div>
+    <pre><code>{{ pointer }}</code></pre>
+    <!-- <div>&lt;Operation/&gt;: <Operation /></div> -->
+  </div>
 </template>
+
+<style scoped>
+.debug {
+  border: 1px solid black;
+  padding: 0.25rem 1rem;
+  font-family: monospace;
+}
+</style>
