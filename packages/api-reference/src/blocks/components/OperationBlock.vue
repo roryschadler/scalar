@@ -8,9 +8,9 @@ import type { WorkspaceStore } from '@scalar/workspace-store/client'
  * use the actual components from @scalar/api-reference.
  */
 defineProps<{
-  store: WorkspaceStore
-  document: string
-  pointer: string[]
+  document: any
+  path: string
+  method: string
 }>()
 </script>
 
@@ -18,9 +18,9 @@ defineProps<{
   <div class="debug">
     <h2>&lt;OperationBlock/&gt;</h2>
     <div><strong>OpenAPI document:</strong></div>
-    <pre><code>{{ JSON.stringify(store.workspace.documents[document], null, 2) }}</code></pre>
-    <div><strong>Pointer:</strong></div>
-    <pre><code>{{ pointer }}</code></pre>
+    <pre><code>{{ JSON.stringify(document, null, 2) }}</code></pre>
+    <div><strong>Operation:</strong></div>
+    <pre><code>{{ method.toLocaleUpperCase() }} {{ path }}</code></pre>
     <!-- <div>&lt;Operation/&gt;: <Operation /></div> -->
   </div>
 </template>

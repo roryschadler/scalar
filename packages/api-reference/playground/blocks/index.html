@@ -19,7 +19,7 @@
 
       const store = createWorkspaceStore()
 
-      store.addDocument({
+      await store.addDocument({
         name: 'test',
         document: {
           openapi: '3.0.0',
@@ -50,9 +50,9 @@
       })
 
       createOperationBlock('#app', {
-        store,
-        document: 'test',
-        pointer: ['paths', '/foobar', 'get'],
+        document: store.workspace.documents.test,
+        path: '/foobar',
+        method: 'get',
       })
     </script>
   </body>
