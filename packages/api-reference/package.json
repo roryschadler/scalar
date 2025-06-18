@@ -36,6 +36,7 @@
     "playground:esm": "vite ./playground/esm -c ./playground/esm/vite.config.ts",
     "playground:ssr": "cd ./playground/ssr && pnpm dev",
     "playground:vue": "vite ./playground/vue -c ./playground/vue/vite.config.ts",
+    "playground:blocks": "vite ./playground/blocks -c ./playground/blocks/vite.config.ts",
     "preview": "vite preview",
     "test": "vitest",
     "types:build": "scalar-types-build-vue",

@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Scalar API Reference</title>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1" />
+  </head>
+
+  <body>
+    <div id="app"></div>
+
+    <!-- Initialize the Scalar OperationBlock -->
+    <script type="module">
+      import { createWorkspaceStore } from '@scalar/workspace-store/client'
+
+      import { createOperationBlock } from '@/blocks'
+
+      const store = createWorkspaceStore()
+
+      store.addDocument({
+        name: 'test',
+        document: {
+          openapi: '3.0.0',
+          info: {
+            title: 'Test',
+            version: '1.0.0',
+          },
+          paths: {
+            '/foobar': {
+              $ref: '#/components/pathItems/Foobar',
+            },
+          },
+          components: {
+            pathItems: {
+              Foobar: {
+                get: {
+                  operationId: 'test',
+                  responses: {
+                    200: {
+                      description: 'Success',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      })
+
+      createOperationBlock('#app', {
+        store,
+        document: 'test',
+        pointer: ['paths', '/foobar', 'get'],
+      })
+    </script>
+  </body>
+</html>
