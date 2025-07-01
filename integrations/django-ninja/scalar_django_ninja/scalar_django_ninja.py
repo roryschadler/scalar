@@ -182,6 +182,12 @@ def get_scalar_api_reference(
       id="api-reference"
       data-url="{openapi_url}"
       data-proxy-url="{scalar_proxy_url}"></script>
+    <script>
+      var configuration = {{
+        _integration: 'django-ninja',
+      }}
+      document.getElementById('api-reference').dataset.configuration = JSON.stringify(configuration)
+    </script>
     <script src="{scalar_js_url}"></script>
     </body>
     </html>
