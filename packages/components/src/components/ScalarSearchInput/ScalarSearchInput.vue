@@ -2,7 +2,7 @@
 /**
  * Scalar search input component
  *
- * Provides an large input field with a loading state and a clear button,
+ * Provides a large input field with a loading state and a clear button,
  * intended to be used with the ScalarSearchResults component.
  *
  * If you want a smaller input field for use in a sidebar, use
