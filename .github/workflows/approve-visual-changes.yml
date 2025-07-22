@@ -1,0 +1,219 @@
+name: Approve Visual Changes
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  approve-visuals:
+    if: |
+      github.event.issue.pull_request &&
+      contains(github.event.comment.body, '@scalar-bot approve-visuals') &&
+      (github.event.comment.author_association == 'MEMBER' || 
+       github.event.comment.author_association == 'OWNER' || 
+       github.event.comment.author_association == 'COLLABORATOR')
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: read
+    steps:
+      - name: Get PR details
+        id: pr
+        uses: actions/github-script@a9ac83be0b95ad56e50c41c3ad09f96b8afc11b5
+        with:
+          script: |
+            const { data: pr } = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+
+            return {
+              head_sha: pr.head.sha,
+              head_ref: pr.head.ref,
+              base_ref: pr.base.ref,
+              head_repo_full_name: pr.head.repo.full_name
+            };
+
+      - name: Checkout PR branch
+        uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ fromJson(steps.pr.outputs.result).head_ref }}
+          repository: ${{ fromJson(steps.pr.outputs.result).head_repo_full_name }}
+
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+
+      - name: Use Node.js 22
+        uses: useblacksmith/setup-node@65c6ca86fdeb0ab3d85e78f57e4f6a7e4780b391
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Download visual diff artifacts
+        id: download-artifacts
+        continue-on-error: true
+        uses: actions/github-script@a9ac83be0b95ad56e50c41c3ad09f96b8afc11b5
+        with:
+          script: |
+            const artifactName = `visual-diffs-${context.issue.number}`;
+
+            // List workflow runs for this PR
+            const { data: workflowRuns } = await github.rest.actions.listWorkflowRunsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head_sha: '${{ fromJson(steps.pr.outputs.result).head_sha }}',
+              per_page: 10
+            });
+
+            // Find artifacts from the most recent CI run
+            for (const run of workflowRuns.workflow_runs) {
+              try {
+                const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: run.id
+                });
+                
+                const visualDiffArtifact = artifacts.artifacts.find(a => a.name === artifactName);
+                
+                if (visualDiffArtifact) {
+                  // Download the artifact
+                  const { data: artifactData } = await github.rest.actions.downloadArtifact({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    artifact_id: visualDiffArtifact.id,
+                    archive_format: 'zip'
+                  });
+                  
+                  // Save to file
+                  const fs = require('fs');
+                  fs.writeFileSync('visual-diffs.zip', Buffer.from(artifactData));
+                  
+                  return { found: true, artifact_id: visualDiffArtifact.id };
+                }
+              } catch (error) {
+                console.log(`Error checking run ${run.id}:`, error.message);
+              }
+            }
+
+            return { found: false };
+
+      - name: Extract and apply visual changes
+        if: fromJson(steps.download-artifacts.outputs.result).found
+        run: |
+          # Extract the artifacts
+          unzip -q visual-diffs.zip || echo "No zip file to extract"
+
+          # Check if we have visual diff summary
+          if [ ! -f "visual-diff-summary.json" ]; then
+            echo "❌ No visual diff summary found"
+            exit 1
+          fi
+
+          # Check if there are differences to apply
+          HAS_DIFFS=$(node -p "require('./visual-diff-summary.json').hasDifferences")
+          if [ "$HAS_DIFFS" != "true" ]; then
+            echo "ℹ️ No visual differences to apply"
+            exit 0
+          fi
+
+          echo "📸 Applying visual changes..."
+
+          # Install dependencies for Playwright
+          pnpm install --dev
+
+          # Update snapshots by running tests with --update-snapshots
+          # We need to set up the environment to match the test conditions
+          pnpm --filter playwright install
+          npx playwright install
+
+          # Copy new snapshots from visual-diffs to test snapshots
+          if [ -d "visual-diffs" ]; then
+            echo "📁 Copying new snapshots..."
+            
+            # Find all actual.png files in visual-diffs and copy them as new baselines
+            find visual-diffs -name "actual.png" | while read -r actual_file; do
+              # Extract test name from path
+              test_name=$(basename "$(dirname "$actual_file")")
+              
+              # Find the corresponding snapshot file in the tests directory
+              snapshot_file=$(find playwright/tests -name "${test_name}-linux.png" | head -1)
+              
+              if [ -n "$snapshot_file" ]; then
+                echo "✅ Updating snapshot: $snapshot_file"
+                cp "$actual_file" "$snapshot_file"
+              else
+                echo "⚠️ Could not find snapshot file for test: $test_name"
+              fi
+            done
+          fi
+
+      - name: Commit updated snapshots
+        if: fromJson(steps.download-artifacts.outputs.result).found
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          # Check if there are any changes to commit
+          if git diff --quiet HEAD; then
+            echo "ℹ️ No snapshot changes to commit"
+            exit 0
+          fi
+
+          git add playwright/tests/**/*-linux.png
+          git commit -m "test: update visual regression snapshots
+
+          Approved-by: ${{ github.event.comment.user.login }}
+          PR: #${{ github.event.issue.number }}"
+
+          git push
+
+      - name: Add reaction to comment
+        if: always()
+        uses: actions/github-script@a9ac83be0b95ad56e50c41c3ad09f96b8afc11b5
+        with:
+          script: |
+            const success = '${{ fromJson(steps.download-artifacts.outputs.result).found }}' === 'true';
+            const reaction = success ? '+1' : 'confused';
+
+            await github.rest.reactions.createForIssueComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: context.payload.comment.id,
+              content: reaction
+            });
+
+      - name: Comment on approval result
+        if: always()
+        uses: actions/github-script@a9ac83be0b95ad56e50c41c3ad09f96b8afc11b5
+        with:
+          script: |
+            const success = '${{ fromJson(steps.download-artifacts.outputs.result).found }}' === 'true';
+
+            let message;
+            if (success) {
+              message = `✅ **Visual changes approved and applied!**
+              
+              The visual regression snapshots have been updated and committed to this PR.
+
+              Updated by: @${{ github.event.comment.user.login }}`;
+            } else {
+              message = `❌ **Could not apply visual changes**
+              
+              No visual diff artifacts were found for this PR. This could mean:
+              - No visual differences were detected in the latest test run
+              - The artifacts have expired (they are kept for 30 days)
+              - The tests haven't run yet for the latest commit
+
+              Please ensure the CI tests have completed and visual differences were detected before approving.`;
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: message
+            });

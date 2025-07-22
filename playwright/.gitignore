@@ -12,5 +12,10 @@ test-*.json
 /blob-report/
 /playwright/.cache/
 
+# Visual regression artifacts
+/visual-diffs/
+visual-diff-report.md
+visual-diff-summary.json
+
 # Temporary Vite/Vitest config files
 *.config.ts.timestamp-*.mjs

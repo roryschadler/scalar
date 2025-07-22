@@ -615,29 +615,71 @@ jobs:
             sleep 10
           done
       - name: Run E2E tests against preview deployment
+        id: e2e-tests
+        continue-on-error: true
         run: |
           # Extract hostname from preview URL for the HOST environment variable
           PREVIEW_HOST=$(echo "${{ env.PREVIEW_URL }}" | sed 's|https://||')
           CI=1 HOST="$PREVIEW_HOST" pnpm test:e2e themes
-      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
-        id: artifact-upload
-        if: ${{ failure() }}
+      - name: Process visual regression results
+        if: always()
+        working-directory: playwright
+        run: |
+          # Install the visual diff helper dependencies
+          node scripts/visual-diff-helper.js
+      - name: Upload visual diff artifacts
+        if: always()
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        id: visual-diff-upload
         with:
-          name: playwright-report-examples
+          name: visual-diffs-${{ github.event.pull_request.number }}
+          path: |
+            ./playwright/visual-diffs/
+            ./playwright/visual-diff-report.md
+            ./playwright/visual-diff-summary.json
+          retention-days: 30
+      - name: Upload full test results
+        if: always()
+        uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        id: test-results-upload
+        with:
+          name: playwright-test-results-${{ github.event.pull_request.number }}
           path: ./playwright/test-results/
           retention-days: 5
-      - name: Comment on PR with E2E test results
+      - name: Check for visual differences
+        id: visual-check
+        if: always()
+        run: |
+          if [ -f "./playwright/visual-diff-summary.json" ]; then
+            HAS_DIFFS=$(node -p "require('./playwright/visual-diff-summary.json').hasDifferences")
+            COUNT=$(node -p "require('./playwright/visual-diff-summary.json').count")
+            echo "has-differences=$HAS_DIFFS" >> "$GITHUB_OUTPUT"
+            echo "diff-count=$COUNT" >> "$GITHUB_OUTPUT"
+          else
+            echo "has-differences=false" >> "$GITHUB_OUTPUT"
+            echo "diff-count=0" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Comment on PR with visual regression results
+        if: always()
         uses: thollander/actions-comment-pull-request@fabd468d3a1a0b97feee5f6b9e499eab0dd903f6
-        if: ${{ failure() }}
         with:
           message: |
-            ### Playwright E2E tests failed against preview examples
+            ### 📸 Visual Regression Test Results
 
-            The E2E tests detected issues with the deployed preview examples.
-            View the [Playwright report](${{ steps.artifact-upload.outputs.artifact-url }}) to review the failures.
+            **Preview URL:** ${{ env.PREVIEW_URL }}
+            **E2E Tests:** ${{ steps.e2e-tests.outcome == 'success' && '✅ Passed' || '❌ Failed' }}
+            **Visual Differences:** ${{ steps.visual-check.outputs.has-differences == 'true' && format('🔍 {0} detected', steps.visual-check.outputs.diff-count) || '✅ None detected' }}
 
-            **Preview URL tested:** ${{ env.PREVIEW_URL }}
-          comment_tag: 'e2e-test-results'
+            ${{ steps.visual-check.outputs.has-differences == 'true' && 
+               format('📋 **Review Required**: Visual differences detected. [View detailed comparison]({0}) in the artifacts.
+               
+               **To approve changes:** Comment `@scalar-bot approve-visuals` on this PR
+               **To reject changes:** Push a new commit with fixes', steps.visual-diff-upload.outputs.artifact-url) || 
+               '✅ All visual tests passed - no changes detected.' }}
+
+            ${{ steps.e2e-tests.outcome != 'success' && format('
+            **Test Failures:** [View detailed test report]({0})', steps.test-results-upload.outputs.artifact-url) || '' }}
+          comment_tag: 'visual-regression-results'
           mode: upsert
           create-if-not-exists: true
 
