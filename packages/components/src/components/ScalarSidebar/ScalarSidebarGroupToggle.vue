@@ -51,10 +51,7 @@ const { cx } = useBindCx()
       <ScalarIconLegacyAdapter
         v-if="icon"
         :icon="icon" />
-      <ScalarIconCaretRight
-        class="size-3"
-        weight="bold"
-        v-else />
+      <ScalarIconCaretRight v-else />
     </slot>
     <span class="sr-only">
       <slot
