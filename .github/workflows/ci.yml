@@ -462,6 +462,9 @@ jobs:
     runs-on: blacksmith-2vcpu-ubuntu-2204
     timeout-minutes: 10
     concurrency: ${{ github.workflow }}-${{ github.ref }}
+    outputs:
+      deploy-id: ${{ steps.generate-deploy-id.outputs.deploy-id }}
+      preview-url: ${{ steps.generate-deploy-id.outputs.preview-url }}
     strategy:
       matrix:
         node-version: [22]
@@ -469,7 +472,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
       - name: Generate new DEPLOY_ID
-        run: echo "DEPLOY_ID=$(uuidgen)" >> "$GITHUB_ENV" && echo $DEPLOY_ID
+        id: generate-deploy-id
+        run: |
+          DEPLOY_ID=$(uuidgen)
+          echo "DEPLOY_ID=$DEPLOY_ID" >> "$GITHUB_ENV"
+          echo "deploy-id=$DEPLOY_ID" >> "$GITHUB_OUTPUT"
+          echo "preview-url=https://$DEPLOY_ID--scalar-deploy-preview.netlify.app" >> "$GITHUB_OUTPUT"
+          echo "Generated DEPLOY_ID: $DEPLOY_ID"
       - name: Build
         uses: ./.github/actions/build-blacksmith
         with:
@@ -557,6 +566,80 @@ jobs:
 
             https://${{env.DEPLOY_ID}}--scalar-components.netlify.app
           comment_tag: 'storybook-preview'
+
+  test-examples-e2e:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && !contains(github.actor, '[bot]')
+    needs: [deploy-examples]
+    runs-on: blacksmith-2vcpu-ubuntu-2204
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [22]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@09d2acae674a48949e3602304ab46fd20ae0c42f
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: useblacksmith/setup-node@65c6ca86fdeb0ab3d85e78f57e4f6a7e4780b391
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dev dependencies
+        run: pnpm install --dev
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "PLAYWRIGHT_VERSION=$(npx playwright --version | cut -d' ' -f2)" >> "$GITHUB_OUTPUT"
+      - name: Playwright binary cache
+        uses: actions/cache@640a1c2554105b57832a23eea0b4672fc7a790d5
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.PLAYWRIGHT_VERSION }}
+      - name: Install Playwright browsers
+        run: npx playwright install
+      - name: Install Playwright dependencies
+        run: npx playwright install-deps
+      - name: Get DEPLOY_ID from deploy-examples job
+        run: |
+          echo "DEPLOY_ID=${{ needs.deploy-examples.outputs.deploy-id }}" >> "$GITHUB_ENV"
+          echo "PREVIEW_URL=${{ needs.deploy-examples.outputs.preview-url }}" >> "$GITHUB_ENV"
+      - name: Wait for deployment to be ready
+        run: |
+          # Wait for the Netlify deployment to be ready
+          for i in {1..30}; do
+            if curl -s -f "${{ env.PREVIEW_URL }}" > /dev/null; then
+              echo "Deployment is ready at ${{ env.PREVIEW_URL }}"
+              break
+            fi
+            echo "Waiting for deployment... ($i/30)"
+            sleep 10
+          done
+      - name: Run E2E tests against preview deployment
+        run: |
+          # Extract hostname from preview URL for the HOST environment variable
+          PREVIEW_HOST=$(echo "${{ env.PREVIEW_URL }}" | sed 's|https://||')
+          CI=1 HOST="$PREVIEW_HOST" pnpm test:e2e themes
+      - uses: actions/upload-artifact@de65e23aa2b7e23d713bb51fbfcb6d502f8667d8
+        id: artifact-upload
+        if: ${{ failure() }}
+        with:
+          name: playwright-report-examples
+          path: ./playwright/test-results/
+          retention-days: 5
+      - name: Comment on PR with E2E test results
+        uses: thollander/actions-comment-pull-request@fabd468d3a1a0b97feee5f6b9e499eab0dd903f6
+        if: ${{ failure() }}
+        with:
+          message: |
+            ### Playwright E2E tests failed against preview examples
+
+            The E2E tests detected issues with the deployed preview examples.
+            View the [Playwright report](${{ steps.artifact-upload.outputs.artifact-url }}) to review the failures.
+
+            **Preview URL tested:** ${{ env.PREVIEW_URL }}
+          comment_tag: 'e2e-test-results'
+          mode: upsert
+          create-if-not-exists: true
 
   aspnetcore-build-test:
     runs-on: blacksmith-2vcpu-ubuntu-2204
