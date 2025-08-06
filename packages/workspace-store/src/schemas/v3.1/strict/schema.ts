@@ -238,3 +238,5 @@ export const schemaObjectSchemaBuilder = <S extends TSchema>(schema: S) => {
 
 export const SchemaObjectSchema = Type.Recursive(schemaObjectSchemaBuilder)
 export type SchemaObject = Static<typeof SchemaObjectSchema>
+
+type PrintMe = Simplify<SchemaObject>
