@@ -8,7 +8,7 @@ import SchemaEnumPropertyItem from './SchemaEnumPropertyItem.vue'
 
 const ENUM_DISPLAY_THRESHOLD = 9
 const INITIAL_VISIBLE_COUNT = 5
-const THIN_SPACE = ' '
+const THIN_SPACE = '\u2009'
 
 const { value } = defineProps<{
   /** The schema object containing enum values and metadata */
@@ -97,7 +97,9 @@ const toggleExpanded = () => {
 </script>
 
 <template>
-  <div class="property-enum">
+  <div
+    class="property-enum"
+    v-if="enumValues.length > 0">
     <ul class="property-enum-values">
       <!-- Visible enum values -->
       <SchemaEnumPropertyItem
