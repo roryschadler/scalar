@@ -24,7 +24,7 @@ interface Props {
   /** Optional name for the schema */
   name?: string
   /** The schema value containing the composition */
-  value: Record<string, any>
+  value: SchemaObject
   /** Nesting level for proper indentation */
   level: number
   /** Whether to use compact layout */
@@ -221,10 +221,10 @@ const schemaValue = computed((): SchemaObject | undefined => {
     <template
       v-if="
         composition === 'allOf' &&
-        value[composition].some((schema: any) => schema.oneOf || schema.anyOf)
+        value[composition]?.some((schema: any) => schema.oneOf || schema.anyOf)
       ">
       <Schema
-        v-for="(schema, index) in value[composition].filter(
+        v-for="(schema, index) in value[composition]?.filter(
           (s: any) => !s.oneOf && !s.anyOf,
         )"
         :key="index"

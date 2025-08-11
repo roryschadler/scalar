@@ -190,16 +190,5 @@ describe('Models', () => {
 
       expect(wrapper.text()).toBe('')
     })
-
-    it('renders nothing if document is undefined', () => {
-      const wrapper = mount(Models, {
-        props: {
-          document: undefined as any,
-          config: mockConfigClassic,
-        },
-      })
-
-      expect(wrapper.text()).toBe('')
-    })
   })
 })

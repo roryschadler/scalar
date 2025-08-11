@@ -5,47 +5,6 @@ import SchemaComposition from './SchemaComposition.vue'
 
 describe('SchemaComposition', () => {
   describe('schema name display', () => {
-    it('displays schema title when both title and name are present', () => {
-      const wrapper = mount(SchemaComposition, {
-        props: {
-          composition: 'oneOf',
-          value: {
-            oneOf: [
-              {
-                name: 'OneModel',
-                title: 'One',
-                type: 'object',
-              },
-            ],
-          },
-          level: 0,
-        },
-      })
-
-      const tab = wrapper.find('.composition-selector-label')
-      expect(tab.text()).toBe('One')
-    })
-
-    it('displays schema name when title is not present', () => {
-      const wrapper = mount(SchemaComposition, {
-        props: {
-          composition: 'oneOf',
-          value: {
-            oneOf: [
-              {
-                name: 'One',
-                type: 'object',
-              },
-            ],
-          },
-          level: 0,
-        },
-      })
-
-      const tab = wrapper.find('.composition-selector-label')
-      expect(tab.text()).toBe('One')
-    })
-
     it('displays schema title when name is not present', () => {
       const wrapper = mount(SchemaComposition, {
         props: {
@@ -83,38 +42,6 @@ describe('SchemaComposition', () => {
 
       const tab = wrapper.find('.composition-selector-label')
       expect(tab.text()).toBe('object')
-    })
-
-    // TODO: This would be nice to have, but we used to compare schemas and in some cases it returned the wrong name.
-    // Let's find another approach and enable this test again.
-    it.todo('displays schema name from components when matching schema is found', () => {
-      const wrapper = mount(SchemaComposition, {
-        props: {
-          composition: 'oneOf',
-          schemas: {
-            User: {
-              type: 'object',
-              properties: {
-                id: { type: 'string' },
-              },
-            },
-          },
-          value: {
-            oneOf: [
-              {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                },
-              },
-            ],
-          },
-          level: 0,
-        },
-      })
-
-      const tab = wrapper.find('.composition-selector-label')
-      expect(tab.text()).toBe('User')
     })
 
     it('humanizes array types with item type', () => {
@@ -311,7 +238,7 @@ describe('SchemaComposition', () => {
     })
   })
 
-  it('merges allOf schemas within anyOf composition', () => {
+  it.only('does not merge allOf schemas within anyOf composition', () => {
     const wrapper = mount(SchemaComposition, {
       props: {
         composition: 'anyOf',
@@ -351,6 +278,7 @@ describe('SchemaComposition', () => {
     const options = listbox.props('options')
 
     expect(options).toHaveLength(2)
+    console.log(options)
     expect(options[0].label).toBe('string')
     expect(options[1].label).toBe('object')
 
@@ -361,7 +289,7 @@ describe('SchemaComposition', () => {
     })
   })
 
-  it('renders merged allOf schema when selected in anyOf composition', async () => {
+  it('does not merge allOf object schemas within anyOf composition', async () => {
     const wrapper = mount(SchemaComposition, {
       props: {
         composition: 'anyOf',

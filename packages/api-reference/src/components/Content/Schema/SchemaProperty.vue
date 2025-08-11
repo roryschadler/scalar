@@ -247,7 +247,7 @@ const compositionsToRender = computed(() => {
     <SchemaPropertyHeading
       v-if="displayPropertyHeading(optimizedValue, name, required)"
       class="group"
-      :isDiscriminator="discriminator?.propertyName === name"
+      :isDiscriminator="discriminator && discriminator.propertyName === name"
       :enum="getEnumFromValue(optimizedValue).length > 0"
       :value="optimizedValue"
       :required

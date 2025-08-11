@@ -206,28 +206,27 @@ const displayType = computed(() => {
 const flattenedDefaultValue = computed(() => {
   const value = props.value
 
-  if (!value) {
-    return value
-  }
-
-  if (value.default === null || !('default' in value)) {
+  if (value?.default === null) {
     return 'null'
   }
 
-  if (Array.isArray(value.default) && value.default.length === 1) {
-    return String(value.default[0])
+  if (Array.isArray(value?.default) && value?.default.length === 1) {
+    return String(value?.default[0])
   }
 
-  if (Array.isArray(value.default)) {
+  if (typeof value?.default === 'string') {
     return JSON.stringify(value.default)
   }
 
-  if (typeof value.default === 'object') {
-    return JSON.stringify(value.default)
+  if (Array.isArray(value?.default)) {
+    return JSON.stringify(value?.default)
   }
 
-  // Return the default value converted to string (handles 0, false, '' correctly)
-  return String(value.default)
+  if (typeof value?.default === 'object') {
+    return JSON.stringify(value?.default)
+  }
+
+  return value?.default
 })
 </script>
 <template>
@@ -273,7 +272,7 @@ const flattenedDefaultValue = computed(() => {
 
       <!-- Default value -->
       <SchemaPropertyDetail
-        v-if="isDefined(flattenedDefaultValue)"
+        v-if="flattenedDefaultValue !== undefined"
         truncate>
         <template #prefix>default:</template>{{ flattenedDefaultValue }}
       </SchemaPropertyDetail>
