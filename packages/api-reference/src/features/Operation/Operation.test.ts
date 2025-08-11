@@ -109,7 +109,7 @@ describe('Operation', () => {
         server: undefined,
         store: createMockStore(createMockDocument()),
         collection: mockCollection,
-        document: createMockDocument() as OpenAPIV3_1.Document,
+        document: createMockDocument(),
       },
     })
 
@@ -165,9 +165,9 @@ describe('Operation', () => {
       components: {
         schemas: {},
       },
-    }
+    } as WorkspaceDocument
 
-    const storeWithOnlyOperationParams = createMockStore(documentWithOnlyOperationParams as WorkspaceDocument)
+    const storeWithOnlyOperationParams = createMockStore(documentWithOnlyOperationParams)
 
     const wrapper = mount(Operation, {
       props: {
@@ -180,7 +180,7 @@ describe('Operation', () => {
         server: undefined,
         store: storeWithOnlyOperationParams,
         collection: mockCollection,
-        document: documentWithOnlyOperationParams as OpenAPIV3_1.Document,
+        document: documentWithOnlyOperationParams,
       },
     })
 
@@ -218,9 +218,9 @@ describe('Operation', () => {
           },
         },
       },
-    }
+    } as WorkspaceDocument
 
-    const storeWithWebhooks = createMockStore(documentWithWebhooks as WorkspaceDocument)
+    const storeWithWebhooks = createMockStore(documentWithWebhooks)
 
     const wrapper = mount(Operation, {
       props: {
@@ -233,7 +233,7 @@ describe('Operation', () => {
         server: undefined,
         store: storeWithWebhooks,
         collection: mockCollection,
-        document: documentWithWebhooks as OpenAPIV3_1.Document,
+        document: documentWithWebhooks,
       },
     })
 
@@ -274,9 +274,9 @@ describe('Operation', () => {
           },
         },
       },
-    }
+    } as WorkspaceDocument
 
-    const storeWithRefs = createMockStore(documentWithRefs as WorkspaceDocument)
+    const storeWithRefs = createMockStore(documentWithRefs)
 
     const wrapper = mount(Operation, {
       props: {
@@ -289,7 +289,7 @@ describe('Operation', () => {
         server: undefined,
         store: storeWithRefs,
         collection: mockCollection,
-        document: documentWithRefs as OpenAPIV3_1.Document,
+        document: documentWithRefs,
       },
     })
 
@@ -366,9 +366,9 @@ describe('Operation', () => {
       components: {
         schemas: {},
       },
-    }
+    } as WorkspaceDocument
 
-    const storeWithOverridingParams = createMockStore(documentWithOverridingParams as WorkspaceDocument)
+    const storeWithOverridingParams = createMockStore(documentWithOverridingParams)
 
     const wrapper = mount(Operation, {
       props: {
@@ -381,7 +381,7 @@ describe('Operation', () => {
         server: undefined,
         store: storeWithOverridingParams,
         collection: mockCollection,
-        document: documentWithOverridingParams as OpenAPIV3_1.Document,
+        document: documentWithOverridingParams,
       },
     })
 
@@ -418,7 +418,7 @@ describe('Operation', () => {
         server: undefined,
         store: createMockStore(createMockDocument() as WorkspaceDocument),
         collection: mockCollection,
-        document: createMockDocument() as OpenAPIV3_1.Document,
+        document: createMockDocument(),
       },
     })
 
@@ -482,7 +482,7 @@ describe('Operation', () => {
         server: undefined,
         store: storeWithoutOperation,
         collection: mockCollection,
-        document: {},
+        document: {} as WorkspaceDocument,
       },
     })
 

@@ -1,4 +1,3 @@
-import { DISCRIMINATOR_CONTEXT } from '@/hooks/useDiscriminator'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
@@ -329,6 +328,7 @@ describe('SchemaProperty', () => {
           variant: 'additionalProperties',
           name: 'propertyName*',
           value: {
+            // @ts-expect-error - ask hans
             type: 'anything',
           },
         },
@@ -588,29 +588,11 @@ describe('SchemaProperty', () => {
 
   describe('discriminator context isolation', () => {
     it('isolates child properties from parent discriminator context', async () => {
-      const mockDiscriminatorContext = {
-        value: {
-          mergedSchema: {
-            type: 'object',
-            properties: {
-              satellites: {
-                type: 'string',
-                description: 'Satellites surrounding the planet',
-              },
-            },
-            required: ['satellites'],
-          },
-          selectedType: 'Planet',
-          discriminatorMapping: { Planet: 'PlanetSatellites' },
-          discriminatorPropertyName: 'type',
-        },
-      }
-
       const childPropertySchema = {
-        type: 'object',
+        type: 'object' as const,
         properties: {
           galaxy: {
-            type: 'string',
+            type: 'string' as const,
             description: 'Galaxy of the planet',
           },
         },
@@ -622,11 +604,6 @@ describe('SchemaProperty', () => {
           value: childPropertySchema,
           name: 'Satellites',
           level: 1,
-        },
-        global: {
-          provide: {
-            [DISCRIMINATOR_CONTEXT]: mockDiscriminatorContext,
-          },
         },
       })
 
