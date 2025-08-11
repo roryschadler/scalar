@@ -198,7 +198,7 @@ describe('SchemaComposition', () => {
         },
       })
 
-      const tab = wrapper.find('.composition-selector-label')
+      const tab = wrapper.findAll('.composition-selector-label')[1]
       expect(tab.text()).toBe('Planet')
     })
   })
@@ -238,7 +238,7 @@ describe('SchemaComposition', () => {
     })
   })
 
-  it.only('does not merge allOf schemas within anyOf composition', () => {
+  it('does not merge allOf schemas within anyOf composition', () => {
     const wrapper = mount(SchemaComposition, {
       props: {
         composition: 'anyOf',
@@ -278,9 +278,8 @@ describe('SchemaComposition', () => {
     const options = listbox.props('options')
 
     expect(options).toHaveLength(2)
-    console.log(options)
     expect(options[0].label).toBe('string')
-    expect(options[1].label).toBe('object')
+    expect(options[1].label).toBe('Schema')
 
     // Check that the first schema (string) is rendered correctly
     const schemaComponent = wrapper.findComponent({ name: 'Schema' })
@@ -326,21 +325,31 @@ describe('SchemaComposition', () => {
 
     // Select the second option (merged allOf schema)
     const listbox = wrapper.findComponent({ name: 'ScalarListbox' })
-    await listbox.vm.$emit('update:modelValue', { id: '1', label: 'object' })
+    await listbox.vm.$emit('update:modelValue', { id: '1', label: 'Schema' })
     await wrapper.vm.$nextTick()
 
     // Check that the merged schema is rendered with both properties
     const schemaComponent = wrapper.findComponent({ name: 'Schema' })
     const schemaValue = schemaComponent.props('value')
 
-    expect(schemaValue.type).toBe('object')
-    expect(schemaValue.properties).toEqual({
-      bar: {
-        type: 'string',
+    expect(typeof schemaValue).toBe('object')
+    expect(schemaValue.allOf).toEqual([
+      {
+        type: 'object',
+        properties: {
+          bar: {
+            type: 'string',
+          },
+        },
       },
-      baz: {
-        type: 'string',
+      {
+        type: 'object',
+        properties: {
+          baz: {
+            type: 'string',
+          },
+        },
       },
-    })
+    ])
   })
 })

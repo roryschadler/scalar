@@ -12,33 +12,30 @@ import {
 } from './helpers/schema-composition'
 import Schema from './Schema.vue'
 
-/**
- * Props for the SchemaComposition component.
- * Handles rendering of OpenAPI schema composition keywords (oneOf, anyOf, allOf).
- */
-interface Props {
-  /** The composition keyword (oneOf, anyOf, allOf) */
-  composition: CompositionKeyword
-  /** Optional discriminator object for polymorphic schemas */
-  discriminator?: DiscriminatorObject
-  /** Optional name for the schema */
-  name?: string
-  /** The schema value containing the composition */
-  value: SchemaObject
-  /** Nesting level for proper indentation */
-  level: number
-  /** Whether to use compact layout */
-  compact?: boolean
-  /** Whether to hide the heading */
-  hideHeading?: boolean
-  /** Breadcrumb for navigation */
-  breadcrumb?: string[]
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  compact: false,
-  hideHeading: false,
-})
+const props = withDefaults(
+  defineProps<{
+    /** The composition keyword (oneOf, anyOf, allOf) */
+    composition: CompositionKeyword
+    /** Optional discriminator object for polymorphic schemas */
+    discriminator?: DiscriminatorObject
+    /** Optional name for the schema */
+    name?: string
+    /** The schema value containing the composition */
+    value: SchemaObject
+    /** Nesting level for proper indentation */
+    level: number
+    /** Whether to use compact layout */
+    compact?: boolean
+    /** Whether to hide the heading */
+    hideHeading?: boolean
+    /** Breadcrumb for navigation */
+    breadcrumb?: string[]
+  }>(),
+  {
+    compact: false,
+    hideHeading: false,
+  },
+)
 
 /** Currently selected schema index in the composition */
 const selectedIndex = ref(0)
@@ -53,20 +50,7 @@ const schemaComposition = computed<SchemaObject[]>(() => {
     return []
   }
 
-  const schemaWithComposition = schemas.find((schema) => hasComposition(schema))
-
-  // No nested compositions, return schemas as-is
-  if (!schemaWithComposition) {
-    return schemas
-  }
-
-  // Handle nested compositions (like allOf containing oneOf)
-  const nestedComposition =
-    schemaWithComposition.oneOf ||
-    schemaWithComposition.anyOf ||
-    schemaWithComposition.allOf
-
-  return nestedComposition || schemas
+  return schemas
 })
 
 /**
