@@ -12,7 +12,7 @@ import { generateClientOptions } from '@/v2/blocks/scalar-request-example-block/
 
 import { TraversedEntryContainer } from './Operations'
 
-const { store } = defineProps<{
+const { store, document: oldDocument } = defineProps<{
   document: OpenAPIV3_1.Document
   config: ApiReferenceConfiguration
   store: WorkspaceStore
@@ -45,7 +45,7 @@ const document = computed(() => store.workspace.activeDocument)
     <!-- Introduction -->
     <Introduction
       v-if="document?.info?.title || document?.info?.description"
-      :document
+      :document="oldDocument"
       :store
       :clientOptions
       :config />

@@ -26,7 +26,7 @@ import SchemaPropertyHeading from './SchemaPropertyHeading.vue'
 const props = withDefaults(
   defineProps<{
     is?: string | Component
-    value: SchemaObject
+    value: SchemaObject | undefined
     noncollapsible?: boolean
     level?: number
     name?: string

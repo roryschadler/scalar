@@ -81,7 +81,7 @@ const getAdditionalPropertiesName = (
  */
 const getAdditionalPropertiesValue = (
   additionalProperties: SchemaObject['additionalProperties'],
-) => {
+): SchemaObject => {
   if (
     additionalProperties === true ||
     (typeof additionalProperties === 'object' &&
@@ -90,6 +90,7 @@ const getAdditionalPropertiesValue = (
     !('type' in additionalProperties)
   ) {
     return {
+      // @ts-expect-error - ask hans
       type: 'anything',
       ...(typeof additionalProperties === 'object' ? additionalProperties : {}),
     }
