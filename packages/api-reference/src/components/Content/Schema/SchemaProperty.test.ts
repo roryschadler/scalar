@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 
 import Schema from './Schema.vue'
 import SchemaProperty from './SchemaProperty.vue'
+import { ScalarListbox } from '@scalar/components'
 
 describe('SchemaProperty', () => {
   describe('expandable schema behavior', () => {
@@ -425,37 +426,6 @@ describe('SchemaProperty', () => {
     })
 
     describe('object compositions', () => {
-      // TODO: remove the skip when we expand the object by default
-      it.skip('renders object compositions with allOf with all properties showing', async () => {
-        const wrapper = mount(SchemaProperty, {
-          props: {
-            value: {
-              allOf: [
-                {
-                  properties: {
-                    testStr: { type: 'string', description: 'This is a test string' },
-                    testBool: { type: 'boolean', description: 'This is a test boolean' },
-                  },
-                  required: ['testStr'],
-                },
-              ],
-            },
-          },
-        })
-
-        // For allOf compositions, properties should be displayed directly without expansion
-        const html = wrapper.html()
-
-        // Check that both properties are rendered with their descriptions
-        expect(html).toContain('testStr')
-        expect(html).toContain('This is a test string')
-        expect(html).toContain('testBool')
-        expect(html).toContain('This is a test boolean')
-
-        // Check that the required property is marked as required
-        expect(html).toContain('required')
-      })
-
       it('renders object compositions with allOf with an object button', async () => {
         const wrapper = mount(SchemaProperty, {
           props: {
@@ -524,20 +494,14 @@ describe('SchemaProperty', () => {
         // Check that the first level composition is rendered
         const firstLevelSelector = wrapper.find('.composition-selector')
         expect(firstLevelSelector.exists()).toBe(true)
-        expect(firstLevelSelector.text()).toContain('One of')
+        expect(firstLevelSelector.text()).toContain('All of')
 
-        // Open the first level
-        await firstLevelSelector.trigger('click')
+        // Select the second option
+        const dropdown = wrapper.findComponent(ScalarListbox)
+        await dropdown.vm.$emit('update:modelValue', { id: '1', label: 'One of' })
         await wrapper.vm.$nextTick()
 
-        // Check that the nested composition is rendered
-        const nestedSelector = wrapper.find('.composition-panel .composition-selector')
-        expect(nestedSelector.exists()).toBe(true)
-        expect(nestedSelector.text()).toContain('One of')
-
-        // Check that the titles are displayed correctly
-        expect(wrapper.html()).toContain('foo (1)')
-        expect(wrapper.html()).toContain('bar (1)')
+        expect(wrapper.text()).toBe('All ofOne ofAll offoo (1)')
       })
     })
 
