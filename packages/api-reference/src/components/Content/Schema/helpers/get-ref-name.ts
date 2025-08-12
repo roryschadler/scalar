@@ -9,7 +9,7 @@ import type { OpenAPIV3_1 } from '@scalar/openapi-types'
  * @example SchemaName from #/components/schemas/SchemaName
  */
 export const getRefName = (schema: OpenAPIV3_1.SchemaObject) => {
-  const ref = schema.$ref || schema['x-original-ref']
+  const ref = schema.$ref
 
   if (!ref) {
     return null
