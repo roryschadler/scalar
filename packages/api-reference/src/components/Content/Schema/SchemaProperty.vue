@@ -146,6 +146,7 @@ const hasComplexArrayItems = computed(() => {
       (Array.isArray(items.type)
         ? items.type.includes('object')
         : ['object'].includes(items.type))) ||
+    'properties' in items ||
     '$ref' in items ||
     'discriminator' in items ||
     'allOf' in items ||
