@@ -461,6 +461,17 @@ const compositionsToRender = computed(() => {
   border-top-right-radius: 0;
 }
 
+.property-rule :deep(.composition-panel .schema-card-description) {
+  padding-left: 8px;
+  padding-right: 8px;
+  border-left: 1px solid var(--scalar-border-color);
+  border-right: 1px solid var(--scalar-border-color);
+
+  & + .schema-properties {
+    margin-top: 0;
+  }
+}
+
 .property-example {
   background: transparent;
   border: none;

@@ -53,27 +53,6 @@ const shouldShowToggle = computed(() => {
 
 /** Gets the description to show for the schema */
 const schemaDescription = computed(() => {
-  // Special handling for allOf compositions
-  if (
-    schema.value?.allOf &&
-    Array.isArray(schema.value.allOf) &&
-    // Because we don't want it to show in models
-    props.name === 'Request Body'
-  ) {
-    // Lets show the base description if it exists
-    if (schema.value.description) {
-      return schema.value.description
-    }
-
-    // Otherwise grab the first description
-    const firstSchemaWithDescription = schema.value.allOf.find(
-      (item) => item.description && typeof item.description === 'string',
-    )
-    if (firstSchemaWithDescription?.description) {
-      return firstSchemaWithDescription.description
-    }
-  }
-
   // Don't show description if there's no description or it's not a string
   if (
     !schema.value?.description ||
