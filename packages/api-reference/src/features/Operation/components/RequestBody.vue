@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ScalarMarkdown } from '@scalar/components'
-import type { OpenAPIV3_1 } from '@scalar/openapi-types'
+import type { RequestBodyObject } from '@scalar/workspace-store/schemas/v3.1/strict/request-body'
 import { computed, ref } from 'vue'
 
 import { Schema } from '@/components/Content/Schema'
@@ -14,7 +14,7 @@ const MAX_VISIBLE_PROPERTIES = 12
 
 const { requestBody } = defineProps<{
   breadcrumb?: string[]
-  requestBody?: OpenAPIV3_1.OperationObject['requestBody']
+  requestBody?: RequestBodyObject
 }>()
 
 const availableContentTypes = computed(() =>

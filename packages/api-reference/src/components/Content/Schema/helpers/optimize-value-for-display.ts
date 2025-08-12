@@ -1,7 +1,10 @@
 import { compositions } from './schema-composition'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
+
 /**
  * Optimize the value by removing nulls from compositions and merging root properties.
+ *
+ * TODO: figure out what this does
  */
 export function optimizeValueForDisplay(value: SchemaObject | undefined): SchemaObject | undefined {
   if (!value || typeof value !== 'object') {

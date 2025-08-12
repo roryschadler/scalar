@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import type { OpenAPIV3_1 } from '@scalar/openapi-types'
+import type { ParameterObject } from '@scalar/workspace-store/schemas/v3.1/strict/parameter'
+import type { RequestBodyObject } from '@scalar/workspace-store/schemas/v3.1/strict/request-body'
 
 import ParameterList from './ParameterList.vue'
 import RequestBody from './RequestBody.vue'
 
 const { parameters = [], requestBody } = defineProps<{
   breadcrumb?: string[]
-  parameters?: OpenAPIV3_1.ParameterObject[]
-  requestBody?: OpenAPIV3_1.RequestBodyObject | undefined
+  parameters?: ParameterObject[]
+  requestBody?: RequestBodyObject | undefined
 }>()
 
 const filterParameters = (where: 'path' | 'query' | 'header' | 'cookie') =>

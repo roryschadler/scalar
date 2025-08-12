@@ -51,7 +51,7 @@ const { getModelId } = useNavState()
           :key="property"
           :name="property"
           :required="schema.required?.includes(property)"
-          :value="value as Record<string, any>" />
+          :value="value" />
       </div>
       <div v-else>
         <SchemaProperty :value="schema" />

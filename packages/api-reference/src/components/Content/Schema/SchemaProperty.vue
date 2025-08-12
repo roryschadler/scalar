@@ -67,29 +67,6 @@ const descriptions: Record<string, Record<string, string>> = {
   },
 }
 
-const displayDescription = (
-  description: string | undefined,
-  value?: Record<string, any>,
-) => {
-  if (value?.properties) {
-    return null
-  }
-
-  if (value?.additionalProperties) {
-    return null
-  }
-
-  if (value?.patternProperties) {
-    return null
-  }
-
-  if (value?.allOf) {
-    return null
-  }
-
-  return description || value?.description || null
-}
-
 const generatePropertyDescription = (property?: Record<string, any>) => {
   if (!property) {
     return null
@@ -109,6 +86,32 @@ const getEnumFromValue = (value?: Record<string, any>): any[] | [] =>
 
 /** Simplified composition with `null` type. */
 const optimizedValue = computed(() => optimizeValueForDisplay(props.value))
+
+const displayDescription = computed(() => {
+  const value = optimizedValue.value
+
+  if (!value) {
+    return null
+  }
+
+  if (value?.properties) {
+    return null
+  }
+
+  if (value?.additionalProperties) {
+    return null
+  }
+
+  if (value?.patternProperties) {
+    return null
+  }
+
+  if (value?.allOf) {
+    return null
+  }
+
+  return props.description || value?.description || null
+})
 
 // Display the property heading if any of the following are true
 const displayPropertyHeading = (
@@ -238,7 +241,6 @@ const compositionsToRender = computed(() => {
     :is="is ?? 'li'"
     class="property"
     :class="[
-      !displayDescription(description, optimizedValue) ? '' : '',
       `property--level-${level}`,
       {
         'property--compact': compact,
@@ -285,10 +287,9 @@ const compositionsToRender = computed(() => {
 
     <!-- Description -->
     <div
-      v-if="displayDescription(description, optimizedValue)"
+      v-if="displayDescription"
       class="property-description">
-      <ScalarMarkdown
-        :value="displayDescription(description, optimizedValue)" />
+      <ScalarMarkdown :value="displayDescription" />
     </div>
     <div
       v-else-if="generatePropertyDescription(optimizedValue)"
