@@ -67,6 +67,11 @@ const humanizeType = (type: CompositionKeyword): string =>
     .replace(/^./, (str) => str.toUpperCase())
     .toLowerCase()
     .replace(/^(\w)/, (c) => c.toUpperCase())
+
+/** Inside the currently selected composition */
+const selectedComposition = computed(
+  () => composition.value[Number(selectedOption.value.id)],
+)
 </script>
 
 <template>
@@ -80,9 +85,18 @@ const humanizeType = (type: CompositionKeyword): string =>
         class="composition-selector bg-b-1.5 hover:bg-b-2 flex w-full cursor-pointer items-center gap-1 rounded-t-lg border border-b-0 px-2 py-1.25 pr-3 text-left"
         type="button">
         <span class="text-c-2">{{ humanizeType(props.composition) }}</span>
-        <span class="composition-selector-label text-c-1">
+        <span
+          class="composition-selector-label text-c-1"
+          :class="{
+            'line-through': selectedComposition?.deprecated,
+          }">
           {{ selectedOption?.label || 'Schema' }}
         </span>
+        <div
+          v-if="selectedComposition?.deprecated"
+          class="text-red">
+          deprecated
+        </div>
         <ScalarIconCaretDown />
       </button>
     </ScalarListbox>
@@ -97,7 +111,7 @@ const humanizeType = (type: CompositionKeyword): string =>
         :hide-heading="hideHeading"
         :name="name"
         :noncollapsible="true"
-        :value="composition[Number(selectedOption.id)]" />
+        :value="selectedComposition" />
     </div>
   </div>
 </template>
