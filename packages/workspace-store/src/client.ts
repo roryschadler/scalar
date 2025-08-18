@@ -544,10 +544,7 @@ export const createWorkspaceStore = (workspaceProps?: WorkspaceProps): Workspace
       })
 
       // We coerce the values only when the document is not preprocessed by the server-side-store
-      mergeObjects(
-        strictDocument,
-        coerceValue(OpenAPIDocumentSchemaStrict, createMagicProxy({ ...deepClone(getRaw(strictDocument)) })),
-      )
+      mergeObjects(strictDocument, coerceValue(OpenAPIDocumentSchemaStrict, strictDocument))
     }
 
     const isValid = Value.Check(OpenAPIDocumentSchemaStrict, strictDocument)

@@ -1,3 +1,4 @@
+import { deepClone } from '@/helpers/general'
 import type { TSchema } from '@sinclair/typebox'
 import { Value } from '@sinclair/typebox/value'
 
@@ -23,4 +24,4 @@ import { Value } from '@sinclair/typebox/value'
  * const coerced = coerceValue(schema, value) // Returns true
  */
 export const coerceValue = <T extends TSchema>(schema: T, value: unknown) =>
-  Value.Cast(schema, Value.Convert(schema, value))
+  Value.Cast(schema, Value.Convert(schema, deepClone(value)))
