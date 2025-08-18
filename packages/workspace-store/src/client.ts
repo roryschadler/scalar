@@ -507,7 +507,8 @@ export const createWorkspaceStore = (workspaceProps?: WorkspaceProps): Workspace
     const { name, meta } = input
     const inputDocument = deepClone(input.document)
 
-    const looseDocument = coerceValue(OpenAPIDocumentSchemaLoose, upgrade(inputDocument).specification)
+    // const looseDocument = coerceValue(OpenAPIDocumentSchemaLoose, upgrade(inputDocument).specification)
+    const looseDocument = inputDocument as any
 
     if (input.initialize !== false) {
       // Store the original document in the originalDocuments map
