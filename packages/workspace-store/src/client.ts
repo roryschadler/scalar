@@ -26,7 +26,6 @@ import { fetchUrls } from '@scalar/json-magic/bundle/plugins/browser'
 import { apply, diff, merge, type Difference } from '@scalar/json-magic/diff'
 import type { TraverseSpecOptions } from '@/navigation/types'
 import type { PartialDeep, RequiredDeep } from 'type-fest'
-import { Value } from '@sinclair/typebox/value'
 import { externalValueResolver, loadingStatus, refsEverywhere, restoreOriginalRefs } from '@/plugins'
 import type { Record } from '@sinclair/typebox'
 
@@ -530,28 +529,21 @@ export const createWorkspaceStore = (workspaceProps?: WorkspaceProps): Workspace
       documentMeta[name] = { origin: input.origin }
     }
 
-    const strictDocument = createMagicProxy({ ...looseDocument, ...meta })
+    const document = deepClone({ ...looseDocument, ...meta })
 
-    if (strictDocument[extensions.document.navigation] === undefined) {
+    if (document[extensions.document.navigation] === undefined) {
       // If the document navigation is not already present, bundle the entire document to resolve all references.
       // This typically applies when the document is not preprocessed by the server and needs local reference resolution.
       // We need to bundle document first before we validate, so we can also validate the external references
-      await bundle(getRaw(strictDocument), {
+      await bundle(document, {
         treeShake: false,
         plugins: [fetchUrls(), externalValueResolver(), refsEverywhere()],
         urlMap: true,
         origin: documentMeta[name]?.origin, // use the document origin (if provided) as the base URL for resolution
       })
-
-      // We coerce the values only when the document is not preprocessed by the server-side-store
-      mergeObjects(strictDocument, coerceValue(OpenAPIDocumentSchemaStrict, strictDocument))
     }
 
-    const isValid = Value.Check(OpenAPIDocumentSchemaStrict, strictDocument)
-
-    if (!isValid) {
-      throw 'Invalid document provided! Please check your input document. It has some invalid refs.'
-    }
+    const strictDocument = coerceValue(OpenAPIDocumentSchemaStrict, document)
 
     // Skip navigation generation if the document already has a server-side generated navigation structure
     if (strictDocument[extensions.document.navigation] === undefined) {
@@ -564,7 +556,7 @@ export const createWorkspaceStore = (workspaceProps?: WorkspaceProps): Workspace
     }
 
     // Create a proxied document with magic proxy and apply any overrides, then store it in the workspace documents map
-    workspace.documents[name] = createOverridesProxy(strictDocument, input.overrides)
+    workspace.documents[name] = createOverridesProxy(createMagicProxy(strictDocument), input.overrides)
   }
 
   // Asynchronously adds a new document to the workspace by loading and validating the input.

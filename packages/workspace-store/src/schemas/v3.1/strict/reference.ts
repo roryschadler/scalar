@@ -1,11 +1,13 @@
 import { compose } from '@/schemas/compose'
-import { Type, type Static, type TIntersect, type TObject, type TSchema } from '@sinclair/typebox'
+import { Type, type Static } from '@sinclair/typebox'
 
 export const ReferenceObjectExtensionsSchema = Type.Object({
   /** Indicates the current status of the reference resolution. Can be either 'loading' while fetching the reference or 'error' if the resolution failed. */
   '$status': Type.Optional(Type.Union([Type.Literal('loading'), Type.Literal('error')])),
   /** Indicates whether this reference should be resolved globally across all documents, rather than just within the current document context. */
   '$global': Type.Optional(Type.Boolean()),
+  /** Resolved reference value */
+  '$ref-value': Type.Unknown(),
 })
 
 /**
@@ -27,15 +29,3 @@ export const ReferenceObjectSchema = compose(
 )
 
 export type ReferenceObject = Static<typeof ReferenceObjectSchema>
-
-export const reference = <T extends TSchema>(schema: T): ReferenceType<T> =>
-  compose(ReferenceObjectSchema, Type.Object({ '$ref-value': schema }))
-
-export type ReferenceType<Schema extends TSchema> = TIntersect<
-  [
-    typeof ReferenceObjectSchema,
-    TObject<{
-      '$ref-value': Schema
-    }>,
-  ]
->

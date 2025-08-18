@@ -2,7 +2,7 @@ import { callbackObjectSchemaBuilder } from '@/schemas/v3.1/strict/callback'
 import { operationObjectSchemaBuilder } from '@/schemas/v3.1/strict/operation'
 import type { ParameterObjectSchema } from '@/schemas/v3.1/strict/parameter'
 import { pathItemObjectSchemaBuilder } from '@/schemas/v3.1/strict/path-item'
-import type { ReferenceType } from '@/schemas/v3.1/strict/reference'
+import type { ReferenceObjectSchema } from '@/schemas/v3.1/strict/reference'
 import type { ServerObjectSchema } from '@/schemas/v3.1/strict/server'
 import {
   Type,
@@ -27,7 +27,7 @@ export const OperationObjectSchema = Type.Recursive((This) =>
  */
 export const CallbackObjectSchema = Type.Recursive((This) =>
   callbackObjectSchemaBuilder(pathItemObjectSchemaBuilder(operationObjectSchemaBuilder(This))),
-) as TRecursive<TRecord<TString, TUnion<[typeof PathItemObjectSchema, ReferenceType<typeof PathItemObjectSchema>]>>>
+) as TRecursive<TRecord<TString, TUnion<[typeof PathItemObjectSchema, typeof ReferenceObjectSchema]>>>
 
 /** Describes the operations available on a single path. A Path Item MAY be empty, due to ACL constraints. The path itself is still exposed to the documentation viewer but they will not know which operations and parameters are available. */
 export const PathItemObjectSchema = Type.Recursive((This) =>
@@ -47,7 +47,7 @@ export const PathItemObjectSchema = Type.Recursive((This) =>
     head: TOptional<typeof OperationObjectSchema>
     trace: TOptional<typeof OperationObjectSchema>
     servers: TOptional<TArray<typeof ServerObjectSchema>>
-    parameters: TOptional<TArray<TUnion<[typeof ParameterObjectSchema, ReferenceType<typeof ParameterObjectSchema>]>>>
+    parameters: TOptional<TArray<TUnion<[typeof ParameterObjectSchema, typeof ReferenceObjectSchema]>>>
   }>
 >
 

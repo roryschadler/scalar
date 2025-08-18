@@ -1,6 +1,6 @@
 import { Type, type Static } from '@sinclair/typebox'
-import { reference } from './reference'
 import { ResponseObjectSchema } from './response'
+import { ReferenceObjectSchema } from '@/schemas/v3.1/strict/reference'
 
 /**
  * A container for the expected responses of an operation. The container maps a HTTP response code to the expected response.
@@ -13,7 +13,7 @@ import { ResponseObjectSchema } from './response'
  */
 export const ResponsesObjectSchema = Type.Record(
   Type.String(),
-  Type.Union([ResponseObjectSchema, reference(ResponseObjectSchema)]),
+  Type.Union([ResponseObjectSchema, ReferenceObjectSchema]),
 )
 
 export type ResponsesObject = Static<typeof ResponsesObjectSchema>
