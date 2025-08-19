@@ -1,6 +1,8 @@
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import SchemaObjectProperties from './SchemaObjectProperties.vue'
+import { SchemaObjectSchema } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
+import { coerceValue } from '@scalar/workspace-store/schemas/typebox-coerce'
 
 // Mock child component to avoid deep rendering
 vi.mock('./SchemaProperty.vue', () => ({
@@ -28,14 +30,14 @@ vi.mock('./SchemaProperty.vue', () => ({
 
 describe('SchemaObjectProperties', () => {
   it('renders properties as SchemaProperty components', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       properties: {
-        foo: { type: 'string' as const },
-        bar: { type: 'number' as const },
+        foo: { type: 'string' },
+        bar: { type: 'number' },
       },
       required: ['foo'],
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -47,14 +49,14 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('marks required properties', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       properties: {
-        foo: { type: 'string' as const },
-        bar: { type: 'number' as const },
+        foo: { type: 'string' },
+        bar: { type: 'number' },
       },
       required: ['foo'],
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -65,13 +67,13 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('renders patternProperties as SchemaProperty components', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       patternProperties: {
-        '^x-': { type: 'string' as const },
-        '^y-': { type: 'boolean' as const },
+        '^x-': { type: 'string' },
+        '^y-': { type: 'boolean' },
       },
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -84,10 +86,10 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('renders additionalProperties as SchemaProperty with default name', () => {
-    const schema = {
-      type: 'object' as const,
-      additionalProperties: { type: 'string' as const },
-    }
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
+      additionalProperties: { type: 'string' },
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -99,13 +101,13 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('renders additionalProperties with x-additionalPropertiesName', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       additionalProperties: {
-        type: 'string' as const,
+        type: 'string',
         'x-additionalPropertiesName': 'customName',
       },
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -117,10 +119,10 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('handles additionalProperties as boolean true correctly', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       additionalProperties: true,
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -132,10 +134,10 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('handles additionalProperties as empty object correctly', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       additionalProperties: {},
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -147,7 +149,9 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('does not render anything if schema has no properties, patternProperties, or additionalProperties', () => {
-    const schema = { type: 'object' as const }
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -157,14 +161,14 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('sorts properties alphabetically when all have same required status', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       properties: {
-        zebra: { type: 'string' as const },
-        alpha: { type: 'number' as const },
-        beta: { type: 'boolean' as const },
+        zebra: { type: 'string' },
+        alpha: { type: 'number' },
+        beta: { type: 'boolean' },
       },
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },
@@ -178,16 +182,16 @@ describe('SchemaObjectProperties', () => {
   })
 
   it('sorts required properties first, then alphabetically', () => {
-    const schema = {
-      type: 'object' as const,
+    const schema = coerceValue(SchemaObjectSchema, {
+      type: 'object',
       properties: {
-        zebra: { type: 'string' as const },
-        alpha: { type: 'number' as const },
-        beta: { type: 'boolean' as const },
-        gamma: { type: 'object' as const },
+        zebra: { type: 'string' },
+        alpha: { type: 'number' },
+        beta: { type: 'boolean' },
+        gamma: { type: 'object' },
       },
       required: ['zebra', 'gamma'],
-    }
+    })
 
     const wrapper = mount(SchemaObjectProperties, {
       props: { schema },

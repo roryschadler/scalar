@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { DiscriminatorObject } from '@scalar/workspace-store/schemas/v3.1/strict/discriminator'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 import { computed } from 'vue'
@@ -61,8 +62,10 @@ const sortedProperties = computed(() => {
  * Uses x-additionalPropertiesName extension if available, otherwise falls back to a default name.
  */
 const getAdditionalPropertiesName = (
-  additionalProperties: SchemaObject['additionalProperties'],
+  _additionalProperties: SchemaObject['additionalProperties'],
 ) => {
+  const additionalProperties = getResolvedRef(_additionalProperties)
+
   if (
     typeof additionalProperties === 'object' &&
     typeof additionalProperties['x-additionalPropertiesName'] === 'string' &&
@@ -114,7 +117,7 @@ const getAdditionalPropertiesValue = (
       :name="property"
       :hideModelNames
       :required="schema.required?.includes(property)"
-      :value="schema.properties[property]" />
+      :value="getResolvedRef(schema.properties[property])" />
   </template>
 
   <!-- patternProperties -->
@@ -129,7 +132,7 @@ const getAdditionalPropertiesValue = (
       :level
       :name="key"
       :hideModelNames="hideModelNames"
-      :value="property" />
+      :value="getResolvedRef(property)" />
   </template>
 
   <!-- additionalProperties -->

@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { isDefined } from '@scalar/helpers/array/is-defined'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 import { computed, toRef } from 'vue'
 
@@ -14,7 +15,7 @@ import SchemaPropertyExamples from './SchemaPropertyExamples.vue'
 
 const props = withDefaults(
   defineProps<{
-    value?: SchemaObject
+    value: SchemaObject | undefined
     enum?: boolean
     isDiscriminator?: boolean
     required?: boolean
@@ -52,12 +53,13 @@ const constValue = computed(() => {
 
   // Check items for const values (for arrays)
   if (schema.items) {
-    if (isDefined(schema.items.const)) {
-      return schema.items.const
+    const items = getResolvedRef(schema.items)
+    if (isDefined(items.const)) {
+      return items.const
     }
 
-    if (schema.items.enum?.length === 1) {
-      return schema.items.enum[0]
+    if (items.enum?.length === 1) {
+      return items.enum[0]
     }
   }
 
@@ -324,7 +326,9 @@ const flattenedDefaultValue = computed(() => {
     <SchemaPropertyExamples
       v-if="props.withExamples"
       :examples="props.value?.examples"
-      :example="props.value?.example || props.value?.items?.example" />
+      :example="
+        props.value?.example || getResolvedRef(props.value?.items)?.example
+      " />
   </div>
 </template>
 <style scoped>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ScalarButton } from '@scalar/components'
 import { ScalarIconPlus } from '@scalar/icons'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 import { computed, ref } from 'vue'
 
@@ -12,18 +13,18 @@ const THIN_SPACE = '\u2009'
 
 const { value } = defineProps<{
   /** The schema object containing enum values and metadata */
-  value?: SchemaObject
+  value: SchemaObject | undefined
 }>()
 
 /**
  * Extracts enum values from the schema object.
  * Handles both direct enum values and nested enum arrays.
  */
-const enumValues = computed((): any[] => {
+const enumValues = computed(() => {
   if (!value) {
     return []
   }
-  return value.enum || value.items?.enum || []
+  return value.enum || getResolvedRef(value.items)?.enum || []
 })
 
 /**
@@ -104,7 +105,7 @@ const toggleExpanded = () => {
       <!-- Visible enum values -->
       <SchemaEnumPropertyItem
         v-for="(enumValue, index) in visibleEnumValues"
-        :key="enumValue"
+        :key="String(enumValue)"
         :label="formatEnumValueWithName(enumValue, index)"
         :description="getEnumValueDescription(enumValue, index)" />
 
@@ -112,7 +113,7 @@ const toggleExpanded = () => {
       <template v-if="shouldUseLongListDisplay && isExpanded">
         <SchemaEnumPropertyItem
           v-for="(enumValue, index) in hiddenEnumValues"
-          :key="enumValue"
+          :key="String(enumValue)"
           :label="
             formatEnumValueWithName(enumValue, initialVisibleCount + index)
           "

@@ -1,5 +1,6 @@
 import { getRefName } from '@/components/Content/Schema/helpers/get-ref-name'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 
 /**
  * Formats an array type string with proper wrapping for union types.
@@ -21,7 +22,7 @@ const processArrayType = (value: SchemaObject, isUnionType: boolean = false): st
     return isUnionType ? 'array' : value.title || value.xml?.name || 'array'
   }
 
-  const itemType = getSchemaType(value.items)
+  const itemType = getSchemaType(getResolvedRef(value.items))
   const baseType = formatArrayType(itemType)
 
   if (isUnionType) {

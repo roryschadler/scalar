@@ -2,15 +2,17 @@ import { mount } from '@vue/test-utils'
 import { describe, expect, it } from 'vitest'
 
 import SchemaPropertyHeading from './SchemaPropertyHeading.vue'
+import { coerceValue } from '@scalar/workspace-store/schemas/typebox-coerce'
+import { SchemaObjectSchema } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 
 describe('SchemaPropertyHeading', () => {
   it('renders falsy default values', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'boolean',
           default: false,
-        },
+        }),
       },
     })
 
@@ -21,6 +23,7 @@ describe('SchemaPropertyHeading', () => {
 
   it('renders required property', () => {
     const wrapper = mount(SchemaPropertyHeading, {
+      // @ts-expect-error - not really sure what this is testing
       props: {
         required: true,
       },
@@ -34,10 +37,10 @@ describe('SchemaPropertyHeading', () => {
   it('renders property type and format', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'string',
           format: 'date-time',
-        },
+        }),
       },
     })
 
@@ -50,9 +53,9 @@ describe('SchemaPropertyHeading', () => {
     it('renders const value', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             const: 'example',
-          },
+          }),
         },
       })
 
@@ -64,9 +67,9 @@ describe('SchemaPropertyHeading', () => {
     it('renders const value: false', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             const: false,
-          },
+          }),
         },
       })
       const constElement = wrapper.find('.property-const')
@@ -77,9 +80,9 @@ describe('SchemaPropertyHeading', () => {
     it('renders const value: 0', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             const: 0,
-          },
+          }),
         },
       })
       const constElement = wrapper.find('.property-const')
@@ -90,9 +93,9 @@ describe('SchemaPropertyHeading', () => {
     it('renders const value: empty string', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             const: '',
-          },
+          }),
         },
       })
       const constElement = wrapper.find('.property-const')
@@ -103,9 +106,9 @@ describe('SchemaPropertyHeading', () => {
     it('renders const value: null', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             const: null,
-          },
+          }),
         },
       })
 
@@ -116,12 +119,12 @@ describe('SchemaPropertyHeading', () => {
     it('renders const value in array items', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             items: {
               const: 'foo',
             },
-          },
+          }),
         },
       })
 
@@ -137,10 +140,10 @@ describe('SchemaPropertyHeading', () => {
   it('renders schema title', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'array',
           items: { type: 'object', title: 'Model' },
-        },
+        }),
         schemas: {
           Model: { type: 'object', title: 'Model' },
         },
@@ -154,9 +157,9 @@ describe('SchemaPropertyHeading', () => {
   it('renders default value: null', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           default: null,
-        },
+        }),
       },
     })
     const defaultValueElement = wrapper.find('.property-heading')
@@ -167,9 +170,9 @@ describe('SchemaPropertyHeading', () => {
   it('renders default value: empty', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           default: '',
-        },
+        }),
       },
     })
     const defaultValueElement = wrapper.find('.property-heading')
@@ -179,10 +182,10 @@ describe('SchemaPropertyHeading', () => {
   it('renders default value without type being present', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           enum: ['bar', 'foo'],
           default: 'foo',
-        },
+        }),
       },
     })
     const defaultValueElement = wrapper.find('.property-heading')
@@ -193,10 +196,10 @@ describe('SchemaPropertyHeading', () => {
   it('formats array type with model reference', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'array',
           items: { type: 'object', title: 'FooModel' },
-        },
+        }),
       },
     })
     const detailsElement = wrapper.find('.property-heading')
@@ -206,10 +209,10 @@ describe('SchemaPropertyHeading', () => {
   it('formats object type with direct model reference', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'object',
           title: 'BarModel',
-        },
+        }),
       },
     })
     const detailsElement = wrapper.find('.property-heading')
@@ -220,10 +223,10 @@ describe('SchemaPropertyHeading', () => {
   it('formats array type with model reference correctly', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'array',
           items: { type: 'object', title: 'BarModel' },
-        },
+        }),
       },
     })
     const detailsElement = wrapper.find('.property-heading')
@@ -233,9 +236,9 @@ describe('SchemaPropertyHeading', () => {
   it('displays plain type when no model name is present', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'string',
-        },
+        }),
       },
     })
     const detailsElement = wrapper.find('.property-heading')
@@ -246,13 +249,13 @@ describe('SchemaPropertyHeading', () => {
   it('displays model name for schema references a component schema', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'object',
           properties: {
             title: { type: 'string' },
             pages: { type: 'integer' },
           },
-        },
+        }),
       },
       slots: {
         name: 'Planet',
@@ -265,10 +268,10 @@ describe('SchemaPropertyHeading', () => {
   it("doesn't show model name when hideModelNames is true", () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'array',
           items: { type: 'string' },
-        },
+        }),
         hideModelNames: true,
         schemas: {
           Planet: {
@@ -286,11 +289,11 @@ describe('SchemaPropertyHeading', () => {
   it('shows model name when hideModelNames is false', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           title: 'Planet',
           type: 'array',
           items: { type: 'string' },
-        },
+        }),
         hideModelNames: false,
       },
     })
@@ -301,10 +304,10 @@ describe('SchemaPropertyHeading', () => {
   it('renders multipleOf property', () => {
     const wrapper = mount(SchemaPropertyHeading, {
       props: {
-        value: {
+        value: coerceValue(SchemaObjectSchema, {
           type: 'number',
           multipleOf: 0.001,
-        },
+        }),
       },
     })
     const detailsElement = wrapper.find('.property-heading')
@@ -316,10 +319,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders exclusiveMinimum property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'number',
             exclusiveMinimum: 5,
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -330,10 +333,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders exclusiveMaximum property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'number',
             exclusiveMaximum: 10,
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -344,11 +347,11 @@ describe('SchemaPropertyHeading', () => {
     it('renders both exclusiveMinimum and exclusiveMaximum properties', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'number',
             exclusiveMinimum: 1,
             exclusiveMaximum: 10,
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -361,11 +364,11 @@ describe('SchemaPropertyHeading', () => {
     it('renders minimum and maximum properties when exclusive values are not present', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'number',
             minimum: 0,
             maximum: 100,
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -378,11 +381,11 @@ describe('SchemaPropertyHeading', () => {
     it('renders exclusiveMinimum and maximum properties together', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'number',
             exclusiveMinimum: 1,
             maximum: 100,
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -395,11 +398,11 @@ describe('SchemaPropertyHeading', () => {
     it('renders minimum and exclusiveMaximum properties together', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'number',
             minimum: 0,
             exclusiveMaximum: 10,
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -414,10 +417,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders pattern property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'string',
             pattern: '^[a-zA-Z0-9]+$',
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -428,10 +431,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders pattern property with complex regex', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'string',
             pattern: '^\\d{4}-\\d{2}-\\d{2}$',
-          },
+          }),
         },
       })
       const detailsElement = wrapper.find('.property-heading')
@@ -444,7 +447,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders name slot content', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string' },
+          value: coerceValue(SchemaObjectSchema, { type: 'string' }),
         },
         slots: {
           name: 'propertyName',
@@ -459,7 +462,7 @@ describe('SchemaPropertyHeading', () => {
     it('applies deprecated class when value is deprecated', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', deprecated: true },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', deprecated: true }),
         },
         slots: {
           name: 'deprecatedProperty',
@@ -473,7 +476,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render name slot when not provided', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string' },
+          value: coerceValue(SchemaObjectSchema, { type: 'string' }),
         },
       })
 
@@ -486,7 +489,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders discriminator property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'object' },
+          value: coerceValue(SchemaObjectSchema, { type: 'object' }),
           isDiscriminator: true,
         },
       })
@@ -499,7 +502,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render discriminator when isDiscriminator is false', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'object' },
+          value: coerceValue(SchemaObjectSchema, { type: 'object' }),
           isDiscriminator: false,
         },
       })
@@ -513,11 +516,11 @@ describe('SchemaPropertyHeading', () => {
     it('renders minItems and maxItems', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             minItems: 1,
             maxItems: 10,
-          },
+          }),
         },
       })
 
@@ -528,10 +531,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders only minItems', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             minItems: 1,
-          },
+          }),
         },
       })
 
@@ -542,10 +545,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders only maxItems', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             maxItems: 10,
-          },
+          }),
         },
       })
 
@@ -556,10 +559,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders uniqueItems property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             uniqueItems: true,
-          },
+          }),
         },
       })
 
@@ -572,10 +575,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders minLength property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'string',
             minLength: 5,
-          },
+          }),
         },
       })
 
@@ -587,10 +590,10 @@ describe('SchemaPropertyHeading', () => {
     it('renders maxLength property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'string',
             maxLength: 100,
-          },
+          }),
         },
       })
 
@@ -602,11 +605,11 @@ describe('SchemaPropertyHeading', () => {
     it('renders both minLength and maxLength', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'string',
             minLength: 5,
             maxLength: 100,
-          },
+          }),
         },
       })
 
@@ -622,9 +625,9 @@ describe('SchemaPropertyHeading', () => {
     it('renders additional properties with custom name', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             'x-additionalPropertiesName': 'custom properties',
-          },
+          }),
           additional: true,
         },
       })
@@ -637,7 +640,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders default additional properties text', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'object' },
+          value: coerceValue(SchemaObjectSchema, { type: 'object' }),
           additional: true,
         },
       })
@@ -650,7 +653,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render additional properties when additional is false', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'object' },
+          value: coerceValue(SchemaObjectSchema, { type: 'object' }),
           additional: false,
         },
       })
@@ -664,7 +667,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders deprecated badge', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', deprecated: true },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', deprecated: true }),
         },
       })
 
@@ -676,7 +679,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render deprecated badge when not deprecated', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', deprecated: false },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', deprecated: false }),
         },
       })
 
@@ -689,7 +692,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders nullable when type is undefined and nullable is true', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { nullable: true },
+          value: coerceValue(SchemaObjectSchema, { nullable: true }),
         },
       })
 
@@ -700,7 +703,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render nullable when type is defined', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', nullable: true },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', nullable: true }),
         },
       })
 
@@ -711,7 +714,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render nullable when nullable is false', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { nullable: false },
+          value: coerceValue(SchemaObjectSchema, { nullable: false }),
         },
       })
 
@@ -724,7 +727,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders read-only property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', readOnly: true },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', readOnly: true }),
         },
       })
 
@@ -736,7 +739,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders write-only property', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', writeOnly: true },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', writeOnly: true }),
         },
       })
 
@@ -748,7 +751,7 @@ describe('SchemaPropertyHeading', () => {
     it('prefers write-only over read-only', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', readOnly: true, writeOnly: true },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', readOnly: true, writeOnly: true }),
         },
       })
 
@@ -762,7 +765,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render read-only or write-only when both are false', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string', readOnly: false, writeOnly: false },
+          value: coerceValue(SchemaObjectSchema, { type: 'string', readOnly: false, writeOnly: false }),
         },
       })
 
@@ -778,7 +781,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders enum when enum prop is true', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string' },
+          value: coerceValue(SchemaObjectSchema, { type: 'string' }),
           enum: true,
         },
       })
@@ -790,7 +793,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render enum when enum prop is false', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string' },
+          value: coerceValue(SchemaObjectSchema, { type: 'string' }),
           enum: false,
         },
       })
@@ -804,7 +807,7 @@ describe('SchemaPropertyHeading', () => {
     it('renders SchemaPropertyExamples when withExamples is true', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string' },
+          value: coerceValue(SchemaObjectSchema, { type: 'string' }),
           withExamples: true,
         },
       })
@@ -816,7 +819,7 @@ describe('SchemaPropertyHeading', () => {
     it('does not render SchemaPropertyExamples when withExamples is false', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'string' },
+          value: coerceValue(SchemaObjectSchema, { type: 'string' }),
           withExamples: false,
         },
       })
@@ -828,11 +831,11 @@ describe('SchemaPropertyHeading', () => {
     it('passes examples and example props to SchemaPropertyExamples', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'string',
             examples: [{ value: 'test' }],
             example: 'default example',
-          },
+          }),
           withExamples: true,
         },
       })
@@ -845,10 +848,10 @@ describe('SchemaPropertyHeading', () => {
     it('uses items.example when value.example is not available', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             items: { type: 'string', example: 'item example' },
-          },
+          }),
           withExamples: true,
         },
       })
@@ -873,7 +876,7 @@ describe('SchemaPropertyHeading', () => {
     it('handles empty value object', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {},
+          value: coerceValue(SchemaObjectSchema, {}),
         },
       })
 
@@ -884,7 +887,7 @@ describe('SchemaPropertyHeading', () => {
     it('handles undefined schemas', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'object' },
+          value: coerceValue(SchemaObjectSchema, { type: 'object' }),
           schemas: undefined,
         },
       })
@@ -895,7 +898,7 @@ describe('SchemaPropertyHeading', () => {
     it('handles empty schemas object', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: { type: 'object' },
+          value: coerceValue(SchemaObjectSchema, { type: 'object' }),
           schemas: {},
         },
       })
@@ -908,10 +911,10 @@ describe('SchemaPropertyHeading', () => {
     it('handles array with single item', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             default: ['single item'],
-          },
+          }),
         },
       })
 
@@ -923,10 +926,10 @@ describe('SchemaPropertyHeading', () => {
     it('handles array with multiple items', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'array',
             default: ['item1', 'item2'],
-          },
+          }),
         },
       })
 
@@ -938,10 +941,10 @@ describe('SchemaPropertyHeading', () => {
     it('handles non-string default values', () => {
       const wrapper = mount(SchemaPropertyHeading, {
         props: {
-          value: {
+          value: coerceValue(SchemaObjectSchema, {
             type: 'number',
             default: 42,
-          },
+          }),
         },
       })
 

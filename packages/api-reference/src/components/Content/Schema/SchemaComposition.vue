@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import { ScalarListbox, type ScalarListboxOption } from '@scalar/components'
+import { isDefined } from '@scalar/helpers/array/is-defined'
 import { ScalarIconCaretDown } from '@scalar/icons'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { DiscriminatorObject } from '@scalar/workspace-store/schemas/v3.1/strict/discriminator'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 import { computed, ref } from 'vue'
@@ -35,17 +37,19 @@ const props = withDefaults(
 )
 
 /** The current composition */
-const composition = computed(() => {
-  const comp = props.value[props.composition]
-  return Array.isArray(comp) ? comp : []
-})
+const composition = computed(() =>
+  [props.value[props.composition]]
+    .flat()
+    .map((schema) => getResolvedRef(schema))
+    .filter(isDefined),
+)
 
 /**
  * Generate listbox options for the composition selector.
  * Each option represents a schema in the composition with a human-readable label.
  */
 const listboxOptions = computed((): ScalarListboxOption[] =>
-  composition.value.map((schema: SchemaObject, index: number) => ({
+  composition.value.map((schema, index: number) => ({
     id: String(index),
     label: getSchemaType(schema) || 'Schema',
   })),
