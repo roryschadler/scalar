@@ -139,7 +139,7 @@ describe('Models', () => {
   })
 
   it('excludes schemas with x-scalar-ignore', () => {
-    const documentWithIgnoredSchema = {
+    const documentWithIgnoredSchema = coerceValue(OpenAPIDocumentSchema, {
       ...mockDocument,
       components: {
         schemas: {
@@ -157,7 +157,7 @@ describe('Models', () => {
           },
         },
       },
-    }
+    })
 
     const wrapper = mount(Models, {
       props: {
