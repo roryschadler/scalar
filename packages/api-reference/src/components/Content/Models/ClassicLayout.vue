@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 
 import { Anchor } from '@/components/Anchor'
@@ -51,7 +52,7 @@ const { getModelId } = useNavState()
           :key="property"
           :name="property"
           :required="schema.required?.includes(property)"
-          :value="value" />
+          :value="getResolvedRef(value)" />
       </div>
       <div v-else>
         <SchemaProperty :value="schema" />

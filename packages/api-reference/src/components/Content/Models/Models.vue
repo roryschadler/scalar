@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ApiReferenceConfiguration } from '@scalar/types'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { OpenApiDocument } from '@scalar/workspace-store/schemas/v3.1/strict/openapi-document'
 import { computed } from 'vue'
 
@@ -27,13 +28,14 @@ const schemas = computed(() => {
   const entries = Object.entries(_schemas)
 
   /** Remove any internal or ignored schemas */
-  return entries.flatMap(([name, schema]) => {
+  return entries.flatMap(([name, _schema]) => {
+    const schema = getResolvedRef(_schema)
     if (schema['x-internal'] || schema['x-scalar-ignore']) {
       return []
     }
 
     // Need the type assertion because of the typescript limitation
-    return [{ name, schema: schema }]
+    return [{ name, schema }]
   })
 })
 </script>

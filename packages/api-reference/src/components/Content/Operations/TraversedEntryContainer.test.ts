@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest'
 import TraversedEntryContainer from './TraversedEntryContainer.vue'
 import { useNavState } from '@/hooks/useNavState'
 import { lazyBus, hasLazyLoaded } from '@/components/Lazy/lazyBus'
-import type { WorkspaceDocument } from '@scalar/workspace-store/schemas/schemas/workspace'
+import type { WorkspaceDocument } from '@scalar/workspace-store/schemas/workspace'
 
 // Mock the sidebar module
 vi.mock('@/features/sidebar')

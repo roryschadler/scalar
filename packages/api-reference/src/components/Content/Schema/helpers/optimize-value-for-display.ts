@@ -1,5 +1,7 @@
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import { compositions } from './schema-composition'
-import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
+import { SchemaObjectSchema, type SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
+import { coerceValue } from '@scalar/workspace-store/schemas/typebox-coerce'
 
 /**
  * Optimize the value by removing nulls from compositions and merging root properties.
@@ -30,7 +32,9 @@ export function optimizeValueForDisplay(value: SchemaObject | undefined): Schema
 
   // Check for null schemas and filter them out in one pass
   const { filteredSchemas, hasNullSchema } = schemas.reduce(
-    (acc: { filteredSchemas: SchemaObject[]; hasNullSchema: boolean }, schema) => {
+    (acc: { filteredSchemas: SchemaObject[]; hasNullSchema: boolean }, _schema) => {
+      const schema = getResolvedRef(_schema)
+
       if (schema?.type === 'null') {
         acc.hasNullSchema = true
       } else {
@@ -59,16 +63,18 @@ export function optimizeValueForDisplay(value: SchemaObject | undefined): Schema
     (hasRootProperties || filteredSchemas.some((schema: SchemaObject) => schema.allOf))
 
   if (shouldMergeRootProperties) {
-    const mergedSchemas = filteredSchemas.map((schema: SchemaObject) => {
+    const mergedSchemas = filteredSchemas.map((_schema: SchemaObject) => {
+      const schema = getResolvedRef(_schema)
+
       // Flatten single-item allOf and merge with root properties
       if (schema.allOf?.length === 1) {
         const { allOf, ...otherProps } = schema
-        return { ...rootProperties, ...otherProps, ...allOf[0] }
+        return { ...rootProperties, ...otherProps, ...getResolvedRef(allOf[0]) }
       }
       return { ...rootProperties, ...schema }
     })
 
-    const result: SchemaObject = { [composition]: mergedSchemas }
+    const result = coerceValue(SchemaObjectSchema, { [composition]: mergedSchemas })
     if (shouldBeNullable) {
       result.nullable = true
     }

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { ScalarMarkdown } from '@scalar/components'
 import { isDefined } from '@scalar/helpers/array/is-defined'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { DiscriminatorObject } from '@scalar/workspace-store/schemas/v3.1/strict/discriminator'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 import { computed, type Component } from 'vue'
@@ -300,7 +301,13 @@ const compositionsToRender = computed(() => {
 
     <!-- Enum -->
     <SchemaEnumValues
-      v-if="(optimizedValue?.enum || optimizedValue?.items?.enum || []).length"
+      v-if="
+        (
+          optimizedValue?.enum ||
+          getResolvedRef(optimizedValue?.items)?.enum ||
+          []
+        ).length
+      "
       :value="optimizedValue" />
 
     <!-- Object -->
@@ -327,7 +334,7 @@ const compositionsToRender = computed(() => {
           :level="level + 1"
           :name="name"
           :noncollapsible="noncollapsible"
-          :value="optimizedValue.items" />
+          :value="getResolvedRef(optimizedValue.items)" />
       </div>
     </template>
 
@@ -343,7 +350,7 @@ const compositionsToRender = computed(() => {
       :level="level"
       :name="name"
       :noncollapsible="noncollapsible"
-      :value="compositionData.value" />
+      :value="getResolvedRef(compositionData.value)" />
     <SpecificationExtension :value="optimizedValue" />
   </component>
 </template>

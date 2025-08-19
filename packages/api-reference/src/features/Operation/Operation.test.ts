@@ -6,7 +6,6 @@ import { createMockSidebar, createMockStore } from '@/helpers/test-utils'
 import Operation from './Operation.vue'
 import { collectionSchema } from '@scalar/oas-utils/entities/spec'
 import type { WorkspaceDocument } from '@scalar/workspace-store/schemas/workspace'
-import type { OpenAPIV3_1 } from '@scalar/openapi-types'
 import { enableConsoleError, enableConsoleWarn } from '@scalar/helpers/testing/console-spies'
 import type { ClientOptionGroup } from '@/v2/blocks/scalar-request-example-block/types'
 import { OpenAPIDocumentSchema } from '@scalar/workspace-store/schemas/v3.1/strict/openapi-document'
@@ -138,7 +137,7 @@ describe('Operation', () => {
   })
 
   it('renders path parameters from operation parameters only when no pathItem parameters', () => {
-    const documentWithOnlyOperationParams = {
+    const documentWithOnlyOperationParams = coerceValue(OpenAPIDocumentSchema, {
       openapi: '3.1.0',
       info: {
         title: 'Test API',
@@ -165,7 +164,7 @@ describe('Operation', () => {
       components: {
         schemas: {},
       },
-    } as WorkspaceDocument
+    })
 
     const storeWithOnlyOperationParams = createMockStore(documentWithOnlyOperationParams)
 
@@ -194,7 +193,7 @@ describe('Operation', () => {
   })
 
   it('handles webhook path parameters correctly', () => {
-    const documentWithWebhooks = {
+    const documentWithWebhooks = coerceValue(OpenAPIDocumentSchema, {
       openapi: '3.1.0',
       info: {
         title: 'Test API',
@@ -218,7 +217,7 @@ describe('Operation', () => {
           },
         },
       },
-    } as WorkspaceDocument
+    })
 
     const storeWithWebhooks = createMockStore(documentWithWebhooks)
 
@@ -247,7 +246,7 @@ describe('Operation', () => {
   })
 
   it('filters out unresolved references from parameters', () => {
-    const documentWithRefs = {
+    const documentWithRefs = coerceValue(OpenAPIDocumentSchema, {
       openapi: '3.1.0',
       info: {
         title: 'Test API',
@@ -274,7 +273,7 @@ describe('Operation', () => {
           },
         },
       },
-    } as WorkspaceDocument
+    })
 
     const storeWithRefs = createMockStore(documentWithRefs)
 
@@ -303,7 +302,7 @@ describe('Operation', () => {
   })
 
   it('overrides path parameters with operation parameters of the same name', () => {
-    const documentWithOverridingParams = {
+    const documentWithOverridingParams = coerceValue(OpenAPIDocumentSchema, {
       openapi: '3.1.0',
       info: {
         title: 'Test API',
@@ -366,7 +365,7 @@ describe('Operation', () => {
       components: {
         schemas: {},
       },
-    } as WorkspaceDocument
+    })
 
     const storeWithOverridingParams = createMockStore(documentWithOverridingParams)
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { HttpMethod as HttpMethodType } from '@scalar/helpers/http/http-methods'
 import { ScalarIconCaretRight } from '@scalar/icons'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import { type OperationObject } from '@scalar/workspace-store/schemas/v3.1/strict/path-operations'
 
 import { HttpMethod } from '@/components/HttpMethod'
@@ -41,8 +42,10 @@ const { method, name, url } = defineProps<{
     <!-- Body -->
     <div class="callback-operation-container flex flex-col gap-2">
       <OperationParameters
-        :requestBody="callback.requestBody"
-        :parameters="callback.parameters" />
+        :requestBody="getResolvedRef(callback.requestBody)"
+        :parameters="
+          callback.parameters?.map((param) => getResolvedRef(param)) ?? []
+        " />
 
       <!-- Responses -->
       <OperationResponses

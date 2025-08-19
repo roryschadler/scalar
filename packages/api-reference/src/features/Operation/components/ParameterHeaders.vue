@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/vue'
 import { ScalarIcon } from '@scalar/components'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import {
   isParameterWithSchema,
   type ParameterObject,
@@ -46,7 +47,7 @@ const parametersWithSchema = computed(() =>
             :key="key"
             :description="header.description"
             :name="`${key}`"
-            :value="header.schema" />
+            :value="getResolvedRef(header.schema)" />
         </DisclosurePanel>
       </div>
     </div>

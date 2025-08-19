@@ -8,6 +8,8 @@ import {
   isOperationDeprecated,
 } from '@scalar/oas-utils/helpers'
 import type { WorkspaceStore } from '@scalar/workspace-store/client'
+import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
+import type { ParameterObject } from '@scalar/workspace-store/schemas/v3.1/strict/parameter'
 import type { OperationObject } from '@scalar/workspace-store/schemas/v3.1/strict/path-operations'
 import type { SecuritySchemeObject } from '@scalar/workspace-store/schemas/v3.1/strict/security-scheme'
 import type { ServerObject } from '@scalar/workspace-store/schemas/v3.1/strict/server'
@@ -113,9 +115,11 @@ const config = useConfig()
               :anchorPrefix="id" />
             <OperationParameters
               :breadcrumb="[id]"
-              :parameters="operation.parameters"
-              :requestBody="operation.requestBody">
-            </OperationParameters>
+              :parameters="
+                // These have been resolved in the Operation.vue component
+                operation.parameters as ParameterObject[]
+              "
+              :requestBody="getResolvedRef(operation.requestBody)" />
             <OperationResponses
               :breadcrumb="[id]"
               :responses="operation.responses" />

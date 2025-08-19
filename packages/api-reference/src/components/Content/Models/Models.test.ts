@@ -2,6 +2,8 @@ import type { ApiReferenceConfiguration } from '@scalar/types'
 import { mount } from '@vue/test-utils'
 import { describe, expect, it, vi } from 'vitest'
 import Models from './Models.vue'
+import { OpenAPIDocumentSchema } from '@scalar/workspace-store/schemas/v3.1/strict/openapi-document'
+import { coerceValue } from '@scalar/workspace-store/schemas/typebox-coerce'
 
 // Mock useSidebar composable
 vi.mock('@/features/sidebar', () => ({
@@ -21,8 +23,8 @@ vi.mock('@/hooks/useNavState', () => ({
 }))
 
 describe('Models', () => {
-  const mockDocument = {
-    openapi: '3.1.0' as const,
+  const mockDocument = coerceValue(OpenAPIDocumentSchema, {
+    openapi: '3.1.0',
     info: {
       title: 'Test API',
       version: '1.0.0',
@@ -30,35 +32,35 @@ describe('Models', () => {
     components: {
       schemas: {
         User: {
-          type: 'object' as const,
+          type: 'object',
           properties: {
             id: {
-              type: 'string' as const,
+              type: 'string',
               description: 'User ID',
             },
             name: {
-              type: 'string' as const,
+              type: 'string',
               description: 'User name',
             },
           },
           required: ['id'],
         },
         Pet: {
-          type: 'object' as const,
+          type: 'object',
           properties: {
             id: {
-              type: 'integer' as const,
+              type: 'integer',
               description: 'Pet ID',
             },
             name: {
-              type: 'string' as const,
+              type: 'string',
               description: 'Pet name',
             },
           },
         },
       },
     },
-  }
+  })
 
   const mockConfigClassic: ApiReferenceConfiguration = {
     layout: 'classic',
