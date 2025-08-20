@@ -15,9 +15,9 @@ import { Type } from '@sinclair/typebox'
  */
 export const XEnumDescriptionsSchema = Type.Object({
   'x-enumDescriptions': Type.Optional(
-    Type.Union([Type.Record(Type.String(), Type.String(), { default: {} }), Type.Array(Type.String())]),
+    Type.Union([Type.Record(Type.String(), Type.String()), Type.Array(Type.String())]),
   ),
   'x-enum-descriptions': Type.Optional(
-    Type.Union([Type.Record(Type.String(), Type.String(), { default: {} }), Type.Array(Type.String())]),
+    Type.Union([Type.Record(Type.String(), Type.String()), Type.Array(Type.String())]),
   ),
 })
