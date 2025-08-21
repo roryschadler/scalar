@@ -121,6 +121,12 @@ const mergeSchemaIntoResult = (result: SchemaObject, schema: SchemaObject): void
         }
       }
     }
+    // Enum
+    else if (key === 'enum') {
+      if (Array.isArray(value) && value.length > 0) {
+        result.enum = [...new Set([...(result.enum || []), ...value])]
+      }
+    }
     // OneOf/AnyOf
     else if (key === 'oneOf' || key === 'anyOf') {
       // Merge oneOf/anyOf subschemas
@@ -142,7 +148,10 @@ const mergeSchemaIntoResult = (result: SchemaObject, schema: SchemaObject): void
     }
     // For all other properties, preserve the first occurrence
     else {
-      result[key] ||= value
+      if (key === 'x-additional-properties-name') {
+        console.log('key', key, value)
+      }
+      result[key] ??= value
     }
   }
 }
@@ -204,7 +213,7 @@ const mergePropertiesIntoResult = (
       }
       // Simple merge without property recursion
       else {
-        result[key] = { ...existing, ...schema }
+        result[key] = { ...schema, ...existing }
       }
     }
   }

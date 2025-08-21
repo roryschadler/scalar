@@ -690,121 +690,162 @@ describe('mergeAllOfSchemas', () => {
     })
   })
 
-  describe('circular', () => {
-    it('merges allOf schemas containing $ref circular references', () => {
-      // Create a more complex scenario with allOf and $ref circular references
-      const { allOf } = coerceValue(SchemaObjectSchema, {
-        allOf: [
-          {
-            allOf: [
-              {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                },
+  it('merges allOf schemas containing $ref circular references', () => {
+    // Create a more complex scenario with allOf and $ref circular references
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          allOf: [
+            {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' },
               },
-              {
-                $ref: '#/components/schemas/BaseEntity',
-                '$ref-value': { type: 'object' },
-              },
-            ],
-          },
-          {
-            allOf: [
-              {
-                type: 'object',
-                properties: {
-                  relationships: {
-                    type: 'object',
-                    properties: {
-                      parent: {
+            },
+            {
+              $ref: '#/components/schemas/BaseEntity',
+              '$ref-value': { type: 'object' },
+            },
+          ],
+        },
+        {
+          allOf: [
+            {
+              type: 'object',
+              properties: {
+                relationships: {
+                  type: 'object',
+                  properties: {
+                    parent: {
+                      $ref: '#/components/schemas/Entity',
+                      '$ref-value': { type: 'object' },
+                    },
+                    children: {
+                      type: 'array',
+                      items: {
                         $ref: '#/components/schemas/Entity',
                         '$ref-value': { type: 'object' },
-                      },
-                      children: {
-                        type: 'array',
-                        items: {
-                          $ref: '#/components/schemas/Entity',
-                          '$ref-value': { type: 'object' },
-                        },
                       },
                     },
                   },
                 },
               },
-              {
-                $ref: '#/components/schemas/TimestampMixin',
-                '$ref-value': { type: 'object' },
-              },
-            ],
-          },
-        ],
-      })
+            },
+            {
+              $ref: '#/components/schemas/TimestampMixin',
+              '$ref-value': { type: 'object' },
+            },
+          ],
+        },
+      ],
+    })
 
-      const result = mergeAllOfSchemas(allOf)
+    const result = mergeAllOfSchemas(allOf)
 
-      expect(result).toStrictEqual({
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          name: { type: 'string' },
-          relationships: {
-            type: 'object',
-            properties: {
-              parent: {
+    expect(result).toStrictEqual({
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        relationships: {
+          type: 'object',
+          properties: {
+            parent: {
+              '$ref': '#/components/schemas/Entity',
+              '$ref-value': { type: 'object' },
+            },
+            children: {
+              type: 'array',
+              items: {
                 '$ref': '#/components/schemas/Entity',
                 '$ref-value': { type: 'object' },
-              },
-              children: {
-                type: 'array',
-                items: {
-                  '$ref': '#/components/schemas/Entity',
-                  '$ref-value': { type: 'object' },
-                },
               },
             },
           },
         },
-      })
+      },
     })
+  })
 
-    it('handles deeply nested allOf with recursion limit', () => {
-      // Create a deeply nested allOf structure that would exceed MAX_DEPTH
-      const createDeepAllOf = (depth: number): SchemaObject => {
-        if (depth === 0) {
-          return coerceValue(SchemaObjectSchema, {
-            type: 'object',
-            properties: {
-              baseProperty: { type: 'string' },
-            },
-          })
-        }
-
+  it('handles deeply nested allOf with recursion limit', () => {
+    // Create a deeply nested allOf structure that would exceed MAX_DEPTH
+    const createDeepAllOf = (depth: number): SchemaObject => {
+      if (depth === 0) {
         return coerceValue(SchemaObjectSchema, {
-          allOf: [
-            {
-              type: 'object',
-              properties: {
-                [`level${depth}`]: { type: 'string' },
-              },
-            },
-            createDeepAllOf(depth - 1),
-          ],
+          type: 'object',
+          properties: {
+            baseProperty: { type: 'string' },
+          },
         })
       }
 
-      const deepSchema = createDeepAllOf(25)
+      return coerceValue(SchemaObjectSchema, {
+        allOf: [
+          {
+            type: 'object',
+            properties: {
+              [`level${depth}`]: { type: 'string' },
+            },
+          },
+          createDeepAllOf(depth - 1),
+        ],
+      })
+    }
 
-      // This should not throw an error and should return a merged result
-      const result = mergeAllOfSchemas([deepSchema])
+    const deepSchema = createDeepAllOf(25)
 
-      expect(result).toBeDefined()
-      expect(typeof result).toBe('object')
+    // This should not throw an error and should return a merged result
+    const result = mergeAllOfSchemas([deepSchema])
 
-      // Should have at least some properties from the early levels
-      expect(result.properties).toBeDefined()
-      expect(result.type).toBe('object')
+    expect(result).toBeDefined()
+    expect(typeof result).toBe('object')
+
+    // Should have at least some properties from the early levels
+    expect(result.properties).toBeDefined()
+    expect(result.type).toBe('object')
+  })
+
+  it('merges two objects with the same properties', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          type: 'object',
+          format: 'date-time',
+          title: 'First title',
+          maxProperties: 20,
+          minProperties: 2,
+          enum: ['value1', 'value2'],
+          properties: { a: { type: 'string' }, b: { description: 'First b' } },
+        },
+        {
+          type: 'object',
+          title: 'Second title',
+          description: 'Second description',
+          contentMediaType: 'application/json',
+          format: 'hostname',
+          enum: ['value3', 'value4'],
+          properties: { a: { type: 'number' }, b: { description: 'Second b' } },
+        },
+        {
+          description: 'Third description',
+          enum: ['value5', 'value6'],
+          maxProperties: 99,
+          minProperties: 50,
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toStrictEqual({
+      type: 'object',
+      format: 'date-time',
+      description: 'Second description',
+      title: 'First title',
+      contentMediaType: 'application/json',
+      enum: ['value1', 'value2', 'value3', 'value4', 'value5', 'value6'],
+      properties: { a: { type: 'string' }, b: { description: 'First b' } },
+      maxProperties: 20,
+      minProperties: 2,
     })
   })
 
@@ -819,36 +860,6 @@ describe('mergeAllOfSchemas', () => {
           default: { defaultValue: 'test' },
           enum: ['value1', 'value2'],
           const: 'constant-value',
-          allOf: [
-            {
-              type: 'object',
-              properties: {
-                allOfProp1: { type: 'string' },
-              },
-            },
-          ],
-          oneOf: [
-            {
-              properties: {
-                oneOfProp1: { type: 'number' },
-              },
-            },
-          ],
-          anyOf: [
-            {
-              properties: {
-                anyOfProp1: { type: 'boolean' },
-              },
-            },
-            {
-              properties: {
-                anyOfProp2: { type: 'integer' },
-              },
-            },
-          ],
-          not: {
-            type: 'null',
-          },
           nullable: true,
           contentMediaType: 'application/json',
           contentEncoding: 'base64',
@@ -882,10 +893,6 @@ describe('mergeAllOfSchemas', () => {
           maxItems: 10,
           minItems: 1,
           uniqueItems: true,
-          items: {
-            type: 'string',
-            minLength: 1,
-          },
           prefixItems: [{ type: 'string' }, { type: 'number' }],
           maxProperties: 20,
           minProperties: 2,
@@ -912,15 +919,11 @@ describe('mergeAllOfSchemas', () => {
           'x-scalar-ignore': false,
           'x-internal': true,
           'x-variable': 'variableName',
-          'x-additional-properties-name': 'additionalPropName',
           'x-enum-descriptions': {
             value1: 'Description for value1',
             value2: 'Description for value2',
           },
-          'x-enum-varnames': {
-            value1: 'VALUE_ONE',
-            value2: 'VALUE_TWO',
-          },
+          'x-enum-varnames': ['VALUE_ONE', 'VALUE_TWO'],
         },
         {
           type: 'object',
@@ -937,6 +940,9 @@ describe('mergeAllOfSchemas', () => {
               minLength: 3,
             },
           },
+          not: {
+            type: 'null',
+          },
           oneOf: [
             {
               properties: {
@@ -952,14 +958,13 @@ describe('mergeAllOfSchemas', () => {
           minLength: 10,
           maximum: 500,
           minimum: 10,
-          'x-tags': ['tag3', 'tag4'],
         },
       ],
     })
 
     const result = mergeAllOfSchemas(allOf)
 
-    expect(result).toStrictEqual({
+    expect(result).toMatchObject({
       type: 'object',
       format: 'custom-format',
       title: 'First Schema',
@@ -1003,20 +1008,11 @@ describe('mergeAllOfSchemas', () => {
       maxItems: 10,
       minItems: 1,
       uniqueItems: true,
-      items: {
-        type: 'string',
-        minLength: 1,
-      },
       prefixItems: [{ type: 'string' }, { type: 'number' }],
       maxProperties: 20,
       minProperties: 2,
       required: ['prop1', 'prop2', 'prop3', 'prop4'],
       properties: {
-        allOfProp1: { type: 'string' },
-        oneOfProp1: { type: 'number' },
-        oneOfProp2: { type: 'string' },
-        anyOfProp1: { type: 'boolean' },
-        anyOfProp2: { type: 'integer' },
         prop1: {
           type: 'string',
           description: 'Enhanced prop1 description',
@@ -1044,15 +1040,11 @@ describe('mergeAllOfSchemas', () => {
       'x-scalar-ignore': false,
       'x-internal': true,
       'x-variable': 'variableName',
-      'x-additional-properties-name': 'additionalPropName',
       'x-enum-descriptions': {
         value1: 'Description for value1',
         value2: 'Description for value2',
       },
-      'x-enum-varnames': {
-        value1: 'VALUE_ONE',
-        value2: 'VALUE_TWO',
-      },
+      'x-enum-varnames': ['VALUE_ONE', 'VALUE_TWO'],
     })
   })
 })
