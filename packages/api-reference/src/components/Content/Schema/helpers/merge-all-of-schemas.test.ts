@@ -827,6 +827,25 @@ describe('mergeAllOfSchemas', () => {
               },
             },
           ],
+          oneOf: [
+            {
+              properties: {
+                oneOfProp1: { type: 'number' },
+              },
+            },
+          ],
+          anyOf: [
+            {
+              properties: {
+                anyOfProp1: { type: 'boolean' },
+              },
+            },
+            {
+              properties: {
+                anyOfProp2: { type: 'integer' },
+              },
+            },
+          ],
           not: {
             type: 'null',
           },
@@ -940,7 +959,7 @@ describe('mergeAllOfSchemas', () => {
 
     const result = mergeAllOfSchemas(allOf)
 
-    expect(result).toEqual({
+    expect(result).toStrictEqual({
       type: 'object',
       format: 'custom-format',
       title: 'First Schema',

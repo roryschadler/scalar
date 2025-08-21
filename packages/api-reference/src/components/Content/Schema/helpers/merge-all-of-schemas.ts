@@ -1,3 +1,4 @@
+import { objectKeys } from '@scalar/helpers/object/object-keys'
 import { getResolvedRef } from '@scalar/workspace-store/helpers/get-resolved-ref'
 import type { SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
 
@@ -56,83 +57,92 @@ export const mergeAllOfSchemas = (schemas: SchemaObject['allOf'], rootSchema?: S
  */
 const mergeSchemaIntoResult = (result: SchemaObject, schema: SchemaObject): void => {
   // Early return if schema is empty
-  const schemaKeys = Object.keys(schema)
+  const schemaKeys = objectKeys(schema)
   if (schemaKeys.length === 0) {
     return
   }
 
-  // Merge required fields with deduplication
-  if (schema.required?.length) {
-    if (result.required?.length) {
-      result.required = [...new Set([...result.required, ...schema.required])]
-    }
-    // Avoid array spread for single assignment
-    else {
-      result.required = schema.required.slice()
-    }
-  }
+  // Loop through all schema properties and handle them appropriately
+  for (const key of schemaKeys) {
+    const value = getResolvedRef(schema[key])
 
-  if (schema.type && !result.type) {
-    result.type = schema.type
-  }
-  if (schema.title && !result.title) {
-    result.title = schema.title
-  }
-  if (schema.description && !result.description) {
-    result.description = schema.description
-  }
-
-  // Merge properties
-  if (schema.properties) {
-    if (!result.properties) {
-      result.properties = {}
-    }
-    mergePropertiesIntoResult(result.properties, schema.properties)
-  }
-
-  const items = getResolvedRef(schema.items)
-
-  // Handle items (for both arrays and objects with items)
-  if (items) {
-    if (schema.type === 'array') {
-      if (!result.items) {
-        result.items = {} as SchemaObject
-      }
-
-      // Handle allOf within array items
-      if (items.allOf) {
-        const mergedItems = mergeAllOfSchemas(items.allOf)
-        Object.assign(result.items, mergedItems)
-      } else {
-        mergeItemsIntoResult(getResolvedRef(result.items), items)
-      }
-    } else if (items.allOf) {
-      // For non-array types with items.allOf, merge into properties
-      const mergedItems = mergeAllOfSchemas(items.allOf)
-      if (mergedItems.properties) {
-        if (!result.properties) {
-          result.properties = {}
-        }
-        mergePropertiesIntoResult(result.properties, mergedItems.properties)
-      }
-    }
-  }
-
-  // Merge oneOf/anyOf subschemas
-  for (const key of ['oneOf', 'anyOf'] as const) {
-    const options = schema[key]
-    if (!options) {
+    if (value === undefined) {
       continue
     }
 
-    if (!result.properties) {
-      result.properties = {}
-    }
-    for (const _option of options) {
-      const option = getResolvedRef(_option)
-      if (option.properties) {
-        mergePropertiesIntoResult(result.properties, option.properties)
+    // Required
+    if (key === 'required') {
+      // Merge required fields with deduplication
+      if (Array.isArray(value) && value.length > 0) {
+        if (result.required?.length) {
+          result.required = [...new Set([...result.required, ...value])]
+        } else {
+          result.required = value.slice()
+        }
       }
+    }
+    // Properties
+    else if (key === 'properties') {
+      // Merge properties recursively
+      if (value && typeof value === 'object') {
+        if (!result.properties) {
+          result.properties = {}
+        }
+        mergePropertiesIntoResult(result.properties, value)
+      }
+    }
+    // Items
+    else if (key === 'items') {
+      // Handle items (for both arrays and objects with items)
+      const items = getResolvedRef(value)
+      if (items) {
+        if (schema.type === 'array') {
+          if (!result.items) {
+            result.items = {} as SchemaObject
+          }
+
+          // Handle allOf within array items
+          if (items.allOf) {
+            const mergedItems = mergeAllOfSchemas(items.allOf)
+            Object.assign(result.items, mergedItems)
+          } else {
+            mergeItemsIntoResult(getResolvedRef(result.items), items)
+          }
+        }
+        // For non-array types with items.allOf, merge into properties
+        else if (items.allOf) {
+          const mergedItems = mergeAllOfSchemas(items.allOf)
+          if (mergedItems.properties) {
+            if (!result.properties) {
+              result.properties = {}
+            }
+            mergePropertiesIntoResult(result.properties, mergedItems.properties)
+          }
+        }
+      }
+    }
+    // OneOf/AnyOf
+    else if (key === 'oneOf' || key === 'anyOf') {
+      // Merge oneOf/anyOf subschemas
+      if (Array.isArray(value)) {
+        if (!result.properties) {
+          result.properties = {}
+        }
+        for (const _option of value) {
+          const option = getResolvedRef(_option)
+          if (option.properties) {
+            mergePropertiesIntoResult(result.properties, option.properties)
+          }
+        }
+      }
+    }
+    // Skip allOf as it's handled at a higher level
+    else if (key === 'allOf') {
+      continue
+    }
+    // For all other properties, preserve the first occurrence
+    else {
+      result[key] ||= value
     }
   }
 }
