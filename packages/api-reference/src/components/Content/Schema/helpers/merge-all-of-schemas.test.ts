@@ -1,0 +1,1039 @@
+import { describe, expect, it } from 'vitest'
+import { mergeAllOfSchemas } from './merge-all-of-schemas'
+import { SchemaObjectSchema, type SchemaObject } from '@scalar/workspace-store/schemas/v3.1/strict/schema'
+import { coerceValue } from '@scalar/workspace-store/schemas/typebox-coerce'
+
+describe('mergeAllOfSchemas', () => {
+  it('returns empty object for empty or invalid input', () => {
+    expect(mergeAllOfSchemas([])).toEqual({})
+    expect(mergeAllOfSchemas(null as any)).toEqual({})
+    expect(mergeAllOfSchemas(undefined as any)).toEqual({})
+    expect(mergeAllOfSchemas('not an array' as any)).toEqual({})
+  })
+
+  it('merges basic properties from multiple schemas', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+          },
+        },
+        {
+          properties: {
+            age: { type: 'number' },
+          },
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        age: { type: 'number' },
+      },
+    })
+  })
+
+  it('handles nested allOf schemas', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          allOf: [
+            {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+              },
+            },
+            {
+              properties: {
+                name: { type: 'string' },
+              },
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+      },
+    })
+  })
+
+  it('combines required fields from multiple schemas', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          required: ['name'],
+        },
+        {
+          required: ['age'],
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      required: ['name', 'age'],
+    })
+  })
+
+  it('preserves first type and description when duplicates exist', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          type: 'object',
+          description: 'First description',
+        },
+        {
+          type: 'array', // Should be ignored
+          description: 'Second description', // Should be ignored
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      type: 'object',
+      description: 'First description',
+    })
+  })
+
+  it('merges deeply nested schema structures', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          type: 'object',
+          properties: {
+            user: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+              },
+            },
+          },
+          required: ['user'],
+        },
+        {
+          properties: {
+            user: {
+              properties: {
+                name: { type: 'string' },
+              },
+            },
+            metadata: { type: 'object' },
+          },
+          required: ['metadata'],
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      type: 'object',
+      properties: {
+        user: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+          },
+        },
+        metadata: { type: 'object' },
+      },
+      required: ['user', 'metadata'],
+    })
+  })
+
+  it('skips non-object schemas during merge', () => {
+    const schemas = [
+      null,
+      undefined,
+      {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+        },
+      },
+      'invalid',
+      {
+        properties: {
+          age: { type: 'number' },
+        },
+      },
+    ] as any[]
+
+    expect(mergeAllOfSchemas(schemas)).toEqual({
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        age: { type: 'number' },
+      },
+    })
+  })
+
+  it('merges allOf schemas within object items', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          type: 'object',
+          items: {
+            allOf: [
+              {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                },
+              },
+              {
+                type: 'object',
+                properties: {
+                  age: { type: 'number' },
+                  email: { type: 'string' },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        age: { type: 'number' },
+        email: { type: 'string' },
+      },
+    })
+  })
+
+  it('merges allOf schemas within array items', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          type: 'array',
+          items: {
+            allOf: [
+              {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                },
+              },
+              {
+                type: 'object',
+                properties: {
+                  age: { type: 'number' },
+                  email: { type: 'string' },
+                },
+                required: ['email'],
+              },
+            ],
+          },
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          age: { type: 'number' },
+          email: { type: 'string' },
+        },
+        required: ['email'],
+      },
+    })
+  })
+
+  it('properly merges multiple top-level objects with array items containing allOf', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          'type': 'object',
+          'properties': {
+            'top-level-property': {
+              'type': 'string',
+            },
+          },
+        },
+        {
+          'type': 'object',
+          'properties': {
+            'top-level-array': {
+              'type': 'array',
+              'items': {
+                'allOf': [
+                  {
+                    'type': 'object',
+                    'properties': {
+                      'all-of-schema-1': {
+                        'type': 'string',
+                      },
+                    },
+                  },
+                  {
+                    'type': 'object',
+                    'allOf': [
+                      {
+                        'type': 'object',
+                        'properties': {
+                          'all-of-schema-2': {
+                            'type': 'array',
+                            'items': {
+                              'allOf': [
+                                {
+                                  'type': 'object',
+                                  'properties': {
+                                    'all-of-schema-2-items-all-of-schema-1': {
+                                      'type': 'string',
+                                    },
+                                  },
+                                },
+                              ],
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      'type': 'object',
+      'properties': {
+        'top-level-property': {
+          'type': 'string',
+        },
+        'top-level-array': {
+          'type': 'array',
+          'items': {
+            'type': 'object',
+            'properties': {
+              'all-of-schema-1': {
+                'type': 'string',
+              },
+              'all-of-schema-2': {
+                'type': 'array',
+                'items': {
+                  'type': 'object',
+                  'properties': {
+                    'all-of-schema-2-items-all-of-schema-1': {
+                      'type': 'string',
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+  })
+
+  it('merges allOf schemas within a large complex schema', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      'description': 'The big long nested list',
+      'allOf': [
+        {
+          'type': 'object',
+          'properties': {
+            'next_page_token': {
+              'type': 'string',
+              'description': 'The next page token to paginate through large result sets.',
+              'example': 'Usse957pzxvmYwlmCZ50a6CNXFrhztxuj82',
+            },
+          },
+        },
+        {
+          'type': 'object',
+          'properties': {
+            'sessions': {
+              'title': 'Recording session list',
+              'type': 'array',
+              'description': 'List of recording sessions',
+              'items': {
+                'allOf': [
+                  {
+                    'type': 'object',
+                    'properties': {
+                      'session_id': {
+                        'type': 'string',
+                        'description':
+                          'Unique session identifier. Each instance of the session will have its own `session_id`.',
+                        'example': 'JZiFOknTQ4yH/tJgaUTlkg==',
+                      },
+                    },
+                  },
+                  {
+                    'type': 'object',
+                    'description': 'List of recording files.',
+                    'allOf': [
+                      {
+                        'type': 'object',
+                        'properties': {
+                          'recording_files': {
+                            'title': 'Recording file list',
+                            'type': 'array',
+                            'description': 'List of recording files.',
+                            'items': {
+                              'allOf': [
+                                {
+                                  'type': 'object',
+                                  'properties': {
+                                    'id': {
+                                      'type': 'string',
+                                      'description':
+                                        'The recording file ID. This is included in the general query response.',
+                                      'example': '35497738-9fef-4f8a-97db-0ec34caef065',
+                                    },
+                                  },
+                                  'description': 'Recording file object.',
+                                },
+                              ],
+                            },
+                          },
+                        },
+                      },
+                    ],
+                  },
+                  {
+                    'type': 'object',
+                    'description': 'This is the one to check',
+                    'items': {
+                      'allOf': [
+                        {
+                          'type': 'object',
+                          'properties': {
+                            'participant_video_files': {
+                              'title': 'The list of recording files for each participant.',
+                              'type': 'array',
+                              'description':
+                                'A list of recording files. The API only returns this response when the **Record a separate audio file of each participant** setting is enabled.',
+                              'items': {
+                                'allOf': [
+                                  {
+                                    'type': 'object',
+                                    'properties': {
+                                      'id': {
+                                        'type': 'string',
+                                        'description':
+                                          "The recording file's unique ID. This is included in the general query response.",
+                                        'example': '24698bd1-589e-4c33-9ba3-bc788b2a0ac2',
+                                      },
+                                    },
+                                    'description': 'The recording file object.',
+                                  },
+                                ],
+                              },
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          },
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      'properties': {
+        'next_page_token': {
+          'type': 'string',
+          'description': 'The next page token to paginate through large result sets.',
+          'example': 'Usse957pzxvmYwlmCZ50a6CNXFrhztxuj82',
+        },
+        'sessions': {
+          'title': 'Recording session list',
+          'type': 'array',
+          'description': 'List of recording sessions',
+          'items': {
+            'description': 'This is the one to check',
+            'type': 'object',
+            'properties': {
+              'session_id': {
+                'type': 'string',
+                'description':
+                  'Unique session identifier. Each instance of the session will have its own `session_id`.',
+                'example': 'JZiFOknTQ4yH/tJgaUTlkg==',
+              },
+              'recording_files': {
+                'title': 'Recording file list',
+                'type': 'array',
+                'description': 'List of recording files.',
+                'items': {
+                  'properties': {
+                    'id': {
+                      'type': 'string',
+                      'description': 'The recording file ID. This is included in the general query response.',
+                      'example': '35497738-9fef-4f8a-97db-0ec34caef065',
+                    },
+                  },
+                  'type': 'object',
+                  'description': 'Recording file object.',
+                },
+              },
+              'participant_video_files': {
+                'title': 'The list of recording files for each participant.',
+                'type': 'array',
+                'description':
+                  'A list of recording files. The API only returns this response when the **Record a separate audio file of each participant** setting is enabled.',
+                'items': {
+                  'properties': {
+                    'id': {
+                      'type': 'string',
+                      'description': "The recording file's unique ID. This is included in the general query response.",
+                      'example': '24698bd1-589e-4c33-9ba3-bc788b2a0ac2',
+                    },
+                  },
+                  'type': 'object',
+                  'description': 'The recording file object.',
+                },
+              },
+            },
+          },
+        },
+      },
+      'type': 'object',
+    })
+  })
+
+  it('merges properties from oneOf/anyOf subschemas within allOf', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          allOf: [
+            {
+              properties: {
+                a: { type: 'string', example: 'foo' },
+              },
+            },
+            {
+              oneOf: [
+                {
+                  properties: {
+                    b: { type: 'number', example: 42 },
+                  },
+                },
+                {
+                  properties: {
+                    c: { type: 'boolean', example: true },
+                  },
+                },
+              ],
+            },
+            {
+              anyOf: [
+                {
+                  properties: {
+                    d: { type: 'integer', example: 7 },
+                  },
+                },
+                {
+                  properties: {
+                    e: { type: 'array', items: { type: 'string' }, example: ['x', 'y'] },
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      properties: {
+        a: { type: 'string', example: 'foo' },
+        b: { type: 'number', example: 42 },
+        c: { type: 'boolean', example: true },
+        d: { type: 'integer', example: 7 },
+        e: { type: 'array', items: { type: 'string' }, example: ['x', 'y'] },
+      },
+    })
+  })
+
+  it('preserves title from first schema that has them', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          title: 'Planet',
+          type: 'object',
+          properties: {
+            name: { type: 'string' },
+          },
+        },
+        {
+          title: 'Should be ignored',
+          type: 'object',
+          properties: {
+            size: { type: 'number' },
+          },
+        },
+      ],
+    })
+
+    expect(mergeAllOfSchemas(allOf)).toEqual({
+      title: 'Planet',
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        size: { type: 'number' },
+      },
+    })
+  })
+
+  it('keeps $refs', () => {
+    // Create schemas that reference each other using $ref
+    const schemas = [
+      coerceValue(SchemaObjectSchema, {
+        type: 'object',
+        properties: {
+          parent: {
+            $ref: '#/components/schemas/Node',
+            '$ref-value': { type: 'object' },
+          },
+        },
+      }),
+    ]
+
+    // This should not throw an error and should return a merged result
+    const result = mergeAllOfSchemas(schemas)
+
+    expect(result).toStrictEqual({
+      type: 'object',
+      properties: {
+        parent: {
+          $ref: '#/components/schemas/Node',
+          '$ref-value': { type: 'object' },
+        },
+      },
+    })
+  })
+
+  it('handles $ref values', () => {
+    // Create schemas that reference each other using $ref
+    const schemas = [
+      coerceValue(SchemaObjectSchema, {
+        type: 'object',
+        properties: {
+          id: { '$ref-value': { type: 'string' } },
+          name: { type: 'string' },
+          parent: {
+            $ref: '#/components/schemas/Node',
+            '$ref-value': { type: 'object' },
+          },
+          children: {
+            type: 'array',
+            items: {
+              $ref: '#/components/schemas/Node',
+              '$ref-value': { type: 'object' },
+            },
+          },
+        },
+      }),
+      coerceValue(SchemaObjectSchema, {
+        type: 'object',
+        properties: {
+          things: { '$ref-value': { type: 'string' } },
+          stuff: {
+            '$ref-value': { allOf: [{ '$ref-value': { type: 'string' } }] },
+          },
+        },
+      }),
+    ]
+
+    // This should not throw an error and should return a merged result
+    const result = mergeAllOfSchemas(schemas)
+
+    expect(result).toStrictEqual({
+      properties: {
+        id: { '$ref-value': { type: 'string' } },
+        name: { type: 'string' },
+        parent: {
+          $ref: '#/components/schemas/Node',
+          '$ref-value': { type: 'object' },
+        },
+        children: {
+          type: 'array',
+          items: {
+            $ref: '#/components/schemas/Node',
+            '$ref-value': { type: 'object' },
+          },
+        },
+        things: { '$ref-value': { type: 'string' } },
+        stuff: {
+          '$ref-value': { allOf: [{ '$ref-value': { type: 'string' } }] },
+        },
+      },
+      type: 'object',
+    })
+  })
+
+  describe('circular', () => {
+    it('merges allOf schemas containing $ref circular references', () => {
+      // Create a more complex scenario with allOf and $ref circular references
+      const { allOf } = coerceValue(SchemaObjectSchema, {
+        allOf: [
+          {
+            allOf: [
+              {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' },
+                },
+              },
+              {
+                $ref: '#/components/schemas/BaseEntity',
+                '$ref-value': { type: 'object' },
+              },
+            ],
+          },
+          {
+            allOf: [
+              {
+                type: 'object',
+                properties: {
+                  relationships: {
+                    type: 'object',
+                    properties: {
+                      parent: {
+                        $ref: '#/components/schemas/Entity',
+                        '$ref-value': { type: 'object' },
+                      },
+                      children: {
+                        type: 'array',
+                        items: {
+                          $ref: '#/components/schemas/Entity',
+                          '$ref-value': { type: 'object' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+              {
+                $ref: '#/components/schemas/TimestampMixin',
+                '$ref-value': { type: 'object' },
+              },
+            ],
+          },
+        ],
+      })
+
+      const result = mergeAllOfSchemas(allOf)
+
+      expect(result).toStrictEqual({
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          name: { type: 'string' },
+          relationships: {
+            type: 'object',
+            properties: {
+              parent: {
+                '$ref': '#/components/schemas/Entity',
+                '$ref-value': { type: 'object' },
+              },
+              children: {
+                type: 'array',
+                items: {
+                  '$ref': '#/components/schemas/Entity',
+                  '$ref-value': { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+      })
+    })
+
+    it('handles deeply nested allOf with recursion limit', () => {
+      // Create a deeply nested allOf structure that would exceed MAX_DEPTH
+      const createDeepAllOf = (depth: number): SchemaObject => {
+        if (depth === 0) {
+          return coerceValue(SchemaObjectSchema, {
+            type: 'object',
+            properties: {
+              baseProperty: { type: 'string' },
+            },
+          })
+        }
+
+        return coerceValue(SchemaObjectSchema, {
+          allOf: [
+            {
+              type: 'object',
+              properties: {
+                [`level${depth}`]: { type: 'string' },
+              },
+            },
+            createDeepAllOf(depth - 1),
+          ],
+        })
+      }
+
+      const deepSchema = createDeepAllOf(25)
+
+      // This should not throw an error and should return a merged result
+      const result = mergeAllOfSchemas([deepSchema])
+
+      expect(result).toBeDefined()
+      expect(typeof result).toBe('object')
+
+      // Should have at least some properties from the early levels
+      expect(result.properties).toBeDefined()
+      expect(result.type).toBe('object')
+    })
+  })
+
+  it('merges schemas with all possible schema object properties', () => {
+    const { allOf } = coerceValue(SchemaObjectSchema, {
+      allOf: [
+        {
+          type: 'object',
+          format: 'custom-format',
+          title: 'First Schema',
+          description: 'First description',
+          default: { defaultValue: 'test' },
+          enum: ['value1', 'value2'],
+          const: 'constant-value',
+          allOf: [
+            {
+              type: 'object',
+              properties: {
+                allOfProp1: { type: 'string' },
+              },
+            },
+          ],
+          not: {
+            type: 'null',
+          },
+          nullable: true,
+          contentMediaType: 'application/json',
+          contentEncoding: 'base64',
+          contentSchema: {
+            type: 'string',
+          },
+          deprecated: false,
+          discriminator: {
+            propertyName: 'type',
+            mapping: {
+              dog: '#/components/schemas/Dog',
+              cat: '#/components/schemas/Cat',
+            },
+          },
+          readOnly: false,
+          writeOnly: false,
+          xml: {
+            name: 'xmlElement',
+            namespace: 'http://example.com',
+            prefix: 'ex',
+            attribute: false,
+            wrapped: true,
+          },
+          externalDocs: {
+            description: 'External documentation',
+            url: 'https://example.com/docs',
+          },
+          example: { exampleValue: 'test' },
+          examples: [{ example1: 'value1' }, { example2: 'value2' }],
+          'x-tags': ['tag1', 'tag2'],
+          maxItems: 10,
+          minItems: 1,
+          uniqueItems: true,
+          items: {
+            type: 'string',
+            minLength: 1,
+          },
+          prefixItems: [{ type: 'string' }, { type: 'number' }],
+          maxProperties: 20,
+          minProperties: 2,
+          required: ['prop1', 'prop2'],
+          properties: {
+            prop1: { type: 'string' },
+            prop2: { type: 'number' },
+          },
+          additionalProperties: {
+            type: 'string',
+          },
+          patternProperties: {
+            '^S_': { type: 'string' },
+            '^I_': { type: 'integer' },
+          },
+          maxLength: 100,
+          minLength: 5,
+          pattern: '^[a-zA-Z]+$',
+          multipleOf: 2.5,
+          maximum: 1000,
+          exclusiveMaximum: 999,
+          minimum: 0,
+          exclusiveMinimum: true,
+          'x-scalar-ignore': false,
+          'x-internal': true,
+          'x-variable': 'variableName',
+          'x-additional-properties-name': 'additionalPropName',
+          'x-enum-descriptions': {
+            value1: 'Description for value1',
+            value2: 'Description for value2',
+          },
+          'x-enum-varnames': {
+            value1: 'VALUE_ONE',
+            value2: 'VALUE_TWO',
+          },
+        },
+        {
+          type: 'object',
+          title: 'Second Schema',
+          description: 'Second description',
+          format: 'another-format',
+          required: ['prop3', 'prop4'],
+          properties: {
+            prop3: { type: 'boolean' },
+            prop4: { type: 'array', items: { type: 'string' } },
+            prop1: {
+              type: 'string',
+              description: 'Enhanced prop1 description',
+              minLength: 3,
+            },
+          },
+          oneOf: [
+            {
+              properties: {
+                oneOfProp2: { type: 'string' },
+              },
+            },
+          ],
+          maxItems: 5,
+          minItems: 2,
+          maxProperties: 15,
+          minProperties: 3,
+          maxLength: 50,
+          minLength: 10,
+          maximum: 500,
+          minimum: 10,
+          'x-tags': ['tag3', 'tag4'],
+        },
+      ],
+    })
+
+    const result = mergeAllOfSchemas(allOf)
+
+    expect(result).toEqual({
+      type: 'object',
+      format: 'custom-format',
+      title: 'First Schema',
+      description: 'First description',
+      default: { defaultValue: 'test' },
+      enum: ['value1', 'value2'],
+      const: 'constant-value',
+      not: {
+        type: 'null',
+      },
+      nullable: true,
+      contentMediaType: 'application/json',
+      contentEncoding: 'base64',
+      contentSchema: {
+        type: 'string',
+      },
+      deprecated: false,
+      discriminator: {
+        propertyName: 'type',
+        mapping: {
+          dog: '#/components/schemas/Dog',
+          cat: '#/components/schemas/Cat',
+        },
+      },
+      readOnly: false,
+      writeOnly: false,
+      xml: {
+        name: 'xmlElement',
+        namespace: 'http://example.com',
+        prefix: 'ex',
+        attribute: false,
+        wrapped: true,
+      },
+      externalDocs: {
+        description: 'External documentation',
+        url: 'https://example.com/docs',
+      },
+      example: { exampleValue: 'test' },
+      examples: [{ example1: 'value1' }, { example2: 'value2' }],
+      'x-tags': ['tag1', 'tag2'],
+      maxItems: 10,
+      minItems: 1,
+      uniqueItems: true,
+      items: {
+        type: 'string',
+        minLength: 1,
+      },
+      prefixItems: [{ type: 'string' }, { type: 'number' }],
+      maxProperties: 20,
+      minProperties: 2,
+      required: ['prop1', 'prop2', 'prop3', 'prop4'],
+      properties: {
+        allOfProp1: { type: 'string' },
+        oneOfProp1: { type: 'number' },
+        oneOfProp2: { type: 'string' },
+        anyOfProp1: { type: 'boolean' },
+        anyOfProp2: { type: 'integer' },
+        prop1: {
+          type: 'string',
+          description: 'Enhanced prop1 description',
+          minLength: 3,
+        },
+        prop2: { type: 'number' },
+        prop3: { type: 'boolean' },
+        prop4: { type: 'array', items: { type: 'string' } },
+      },
+      additionalProperties: {
+        type: 'string',
+      },
+      patternProperties: {
+        '^S_': { type: 'string' },
+        '^I_': { type: 'integer' },
+      },
+      maxLength: 100,
+      minLength: 5,
+      pattern: '^[a-zA-Z]+$',
+      multipleOf: 2.5,
+      maximum: 1000,
+      exclusiveMaximum: 999,
+      minimum: 0,
+      exclusiveMinimum: true,
+      'x-scalar-ignore': false,
+      'x-internal': true,
+      'x-variable': 'variableName',
+      'x-additional-properties-name': 'additionalPropName',
+      'x-enum-descriptions': {
+        value1: 'Description for value1',
+        value2: 'Description for value2',
+      },
+      'x-enum-varnames': {
+        value1: 'VALUE_ONE',
+        value2: 'VALUE_TWO',
+      },
+    })
+  })
+})
