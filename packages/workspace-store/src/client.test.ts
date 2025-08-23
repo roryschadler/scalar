@@ -282,7 +282,7 @@ describe('create-workspace-store', () => {
 
     // The operation should not be resolved on the fly
     expect(store.workspace.activeDocument?.paths?.['/users']?.get).toEqual({
-      '$ref': 'http://localhost:9988/default/operations/~1users/get#',
+      $ref: 'http://localhost:9988/default/operations/~1users/get#',
       $global: true,
     })
 
@@ -408,7 +408,7 @@ describe('create-workspace-store', () => {
 
     // The operation should not be resolved on the fly
     expect(store.workspace.activeDocument?.paths?.['/users']?.get).toEqual({
-      '$ref': `${url}/default/operations/~1users/get#`,
+      $ref: `${url}/default/operations/~1users/get#`,
       $global: true,
     })
 
@@ -455,9 +455,9 @@ describe('create-workspace-store', () => {
             Todo: {
               type: 'object',
               properties: {
-                id: { 'type': 'string' },
-                title: { 'type': 'string' },
-                completed: { 'type': 'boolean' },
+                id: { type: 'string' },
+                title: { type: 'string' },
+                completed: { type: 'boolean' },
               },
             },
           },
@@ -468,86 +468,86 @@ describe('create-workspace-store', () => {
 
     store.update('x-scalar-active-document', 'default')
     expect(store.workspace.activeDocument).toEqual({
-      'components': {
-        'schemas': {
-          'Todo': {
-            'properties': {
-              'completed': {
-                'type': 'boolean',
+      components: {
+        schemas: {
+          Todo: {
+            properties: {
+              completed: {
+                type: 'boolean',
               },
-              'id': {
-                'type': 'string',
+              id: {
+                type: 'string',
               },
-              'title': {
-                'type': 'string',
+              title: {
+                type: 'string',
               },
             },
-            'type': 'object',
+            type: 'object',
           },
         },
       },
-      'info': {
-        'title': 'Todo API',
-        'version': '1.0.0',
+      info: {
+        title: 'Todo API',
+        version: '1.0.0',
       },
-      'openapi': '3.1.1',
-      'paths': {
+      openapi: '3.1.1',
+      paths: {
         '/todos': {
-          'get': {
-            'responses': {
+          get: {
+            responses: {
               '200': {
-                'content': {
+                content: {
                   'application/json': {
-                    'schema': {
-                      'items': {
-                        '$ref': '#/components/schemas/Todo',
+                    schema: {
+                      items: {
+                        $ref: '#/components/schemas/Todo',
                         '$ref-value': {
-                          'properties': {
-                            'completed': {
-                              'type': 'boolean',
+                          properties: {
+                            completed: {
+                              type: 'boolean',
                             },
-                            'id': {
-                              'type': 'string',
+                            id: {
+                              type: 'string',
                             },
-                            'title': {
-                              'type': 'string',
+                            title: {
+                              type: 'string',
                             },
                           },
-                          'type': 'object',
+                          type: 'object',
                         },
                       },
-                      'type': 'array',
+                      type: 'array',
                     },
                   },
                 },
-                'description': 'A list of todos',
+                description: 'A list of todos',
               },
             },
-            'summary': 'List all todos',
+            summary: 'List all todos',
           },
         },
       },
       'x-scalar-navigation': [
         {
-          'id': 'List all todos',
-          'method': 'get',
-          'path': '/todos',
-          'title': 'List all todos',
+          id: 'List all todos',
+          method: 'get',
+          path: '/todos',
+          title: 'List all todos',
           ref: '#/paths/~1todos/get',
           type: 'operation',
         },
         {
-          'children': [
+          children: [
             {
-              'id': 'Todo',
-              'name': 'Todo',
-              'title': 'Todo',
+              id: 'Todo',
+              name: 'Todo',
+              title: 'Todo',
               ref: '#/content/components/schemas/Todo',
               type: 'model',
             },
           ],
-          'id': '',
-          'title': 'Models',
+          id: '',
+          title: 'Models',
           type: 'text',
         },
       ],
@@ -684,11 +684,11 @@ describe('create-workspace-store', () => {
               summary: 'Ping the remote server',
             },
           },
-          '$ref': '#/x-ext/c766ed8',
+          $ref: '#/x-ext/c766ed8',
         },
       },
       'x-ext': {
-        'c766ed8': {
+        c766ed8: {
           get: {
             responses: {
               200: {
@@ -707,7 +707,7 @@ describe('create-workspace-store', () => {
         },
       },
       'x-ext-urls': {
-        'c766ed8': 'http://localhost:9988',
+        c766ed8: 'http://localhost:9988',
       },
       'x-scalar-navigation': [],
     })
@@ -760,8 +760,8 @@ describe('create-workspace-store', () => {
             properties: {
               email: {
                 description: 'The user email',
-                'format': 'email',
-                'type': 'string',
+                format: 'email',
+                type: 'string',
               },
               id: {
                 description: 'The user ID',
@@ -1022,6 +1022,154 @@ describe('create-workspace-store', () => {
     )
   })
 
+  it.only('another circular reference', async () => {
+    const store = createWorkspaceStore()
+    await store.addDocument({
+      name: 'default',
+      document: {
+        openapi: '3.1.0',
+        info: {
+          title: 'Hello World',
+          version: '1.0.0',
+        },
+        components: {
+          schemas: {
+            JsonObject: {
+              additionalProperties: {
+                $ref: '#/components/schemas/JsonValue',
+              },
+              type: 'object',
+            },
+            JsonValue: {
+              anyOf: [
+                {
+                  type: 'string',
+                },
+                {
+                  type: 'number',
+                  format: 'double',
+                },
+                {
+                  type: 'boolean',
+                },
+                {
+                  $ref: '#/components/schemas/JsonObject',
+                },
+              ],
+            },
+          },
+        },
+        paths: {
+          '/get': {
+            get: {
+              responses: {
+                '200': {
+                  content: {
+                    'application/json': {
+                      schema: {
+                        $ref: '#/components/schemas/JsonObject',
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+    expect(JSON.stringify(getRaw(store.workspace.activeDocument))).toBe('todo')
+  })
+
+  it('a third circular reference', async () => {
+    const store = createWorkspaceStore()
+    await store.addDocument({
+      name: 'default',
+      document: {
+        openapi: '3.1.0',
+        paths: {
+          '/test': {
+            post: {
+              operationId: 'post',
+              parameters: [
+                {
+                  name: '',
+                  required: true,
+                  in: 'query',
+                  schema: {
+                    $ref: '#/components/schemas/FilterSet',
+                  },
+                },
+              ],
+              responses: null,
+            },
+          },
+        },
+        info: {
+          title: 'API Reference',
+          description: 'API Reference',
+          version: '1.0.0',
+          contact: {},
+        },
+        tags: [],
+        servers: [],
+        components: {
+          schemas: {
+            FilterSet: {
+              $schema: 'https://json-schema.org/draft/2020-12/schema',
+              id: 'FilterSet',
+              type: 'object',
+              properties: {
+                type: {
+                  type: 'string',
+                  const: 'nested',
+                },
+                conjunction: {
+                  type: 'string',
+                  enum: ['and', 'or'],
+                },
+                conditions: {
+                  type: 'array',
+                  items: {
+                    anyOf: [
+                      {
+                        anyOf: [
+                          {
+                            type: 'object',
+                            properties: {
+                              type: {
+                                type: 'string',
+                                const: 'single',
+                              },
+                              field: {
+                                type: 'string',
+                              },
+                              operator: {
+                                type: 'string',
+                                enum: ['eq', 'ne', 'gt', 'lt', 'gte', 'lte', 'like', 'nlike'],
+                              },
+                              value: {
+                                type: 'string',
+                              },
+                            },
+                          },
+                        ],
+                      },
+                      {
+                        $ref: '#/components/schemas/FilterSet',
+                      },
+                    ],
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+    expect(JSON.stringify(getRaw(store.workspace.activeDocument))).toBe('todo')
+  })
+
   it.skip('clean up the document to support non-compliant documents', async () => {
     const store = createWorkspaceStore()
 
@@ -1146,37 +1294,37 @@ describe('create-workspace-store', () => {
     })
 
     expect(client.workspace.documents['default']).toEqual({
-      'info': {
-        'title': '',
-        'version': '',
+      info: {
+        title: '',
+        version: '',
       },
-      'openapi': '',
-      'paths': {
+      openapi: '',
+      paths: {
         '/users': {
-          'get': {
-            '$ref': '#/x-ext/a327830',
+          get: {
+            $ref: '#/x-ext/a327830',
             '$ref-value': {
-              'summary': 'User path',
+              summary: 'User path',
             },
           },
         },
       },
       'x-ext': {
-        'a327830': {
-          'summary': 'User path',
+        a327830: {
+          summary: 'User path',
         },
       },
       'x-ext-urls': {
-        'a327830': 'http://localhost:9988/path',
+        a327830: 'http://localhost:9988/path',
       },
       'x-scalar-navigation': [
         {
-          'id': 'User path',
-          'method': 'get',
-          'path': '/users',
-          'ref': '#/paths/~1users/get',
-          'title': 'User path',
-          'type': 'operation',
+          id: 'User path',
+          method: 'get',
+          path: '/users',
+          ref: '#/paths/~1users/get',
+          title: 'User path',
+          type: 'operation',
         },
       ],
     })
@@ -1224,37 +1372,37 @@ describe('create-workspace-store', () => {
     })
 
     expect(client.workspace.documents['default']).toEqual({
-      'info': {
-        'title': '',
-        'version': '',
+      info: {
+        title: '',
+        version: '',
       },
-      'openapi': '',
-      'paths': {
+      openapi: '',
+      paths: {
         '/users': {
-          'get': {
-            '$ref': '#/x-ext/a327830',
+          get: {
+            $ref: '#/x-ext/a327830',
             '$ref-value': {
-              'summary': 'User path',
+              summary: 'User path',
             },
           },
         },
       },
       'x-ext': {
-        'a327830': {
-          'summary': 'User path',
+        a327830: {
+          summary: 'User path',
         },
       },
       'x-ext-urls': {
-        'a327830': 'http://localhost:9988/path',
+        a327830: 'http://localhost:9988/path',
       },
       'x-scalar-navigation': [
         {
-          'id': 'User path',
-          'method': 'get',
-          'path': '/users',
-          'ref': '#/paths/~1users/get',
-          'title': 'User path',
-          'type': 'operation',
+          id: 'User path',
+          method: 'get',
+          path: '/users',
+          ref: '#/paths/~1users/get',
+          title: 'User path',
+          type: 'operation',
         },
       ],
     })
@@ -1595,7 +1743,7 @@ describe('create-workspace-store', () => {
             'x-scalar-theme': 'saturn',
           },
           documentConfigs: {
-            default: { 'x-scalar-reference-config': { 'features': { 'showModels': false, 'showDownload': false } } },
+            default: { 'x-scalar-reference-config': { features: { showModels: false, showDownload: false } } },
             'pet-store': {},
           },
           originalDocuments: {
@@ -1617,7 +1765,7 @@ describe('create-workspace-store', () => {
             'pet-store': {
               openapi: '3.1.1',
               info: { title: 'Pet Store API', version: '1.0.0' },
-              'paths': { '/users': { 'get': { 'description': 'Get all users' } } },
+              paths: { '/users': { get: { description: 'Get all users' } } },
             },
           },
           overrides: { default: {}, 'pet-store': {} },
@@ -1667,7 +1815,7 @@ describe('create-workspace-store', () => {
             'x-scalar-theme': 'saturn',
           },
           documentConfigs: {
-            default: { 'x-scalar-reference-config': { 'features': { 'showModels': false, 'showDownload': false } } },
+            default: { 'x-scalar-reference-config': { features: { showModels: false, showDownload: false } } },
             'pet-store': {},
           },
           originalDocuments: {
@@ -1691,7 +1839,7 @@ describe('create-workspace-store', () => {
             'pet-store': {
               openapi: '3.1.1',
               info: { title: 'Pet Store API', version: '1.0.0' },
-              'paths': { '/users': { 'get': { 'description': 'Get all users' } } },
+              paths: { '/users': { get: { description: 'Get all users' } } },
             },
           },
         }),
@@ -1973,7 +2121,7 @@ describe('create-workspace-store', () => {
         },
         workspace: 'draft',
         documents: {
-          'default': {
+          default: {
             $ref: `${url}/default`,
           },
         },
@@ -1997,7 +2145,7 @@ describe('create-workspace-store', () => {
         },
         workspace: 'draft',
         documents: {
-          'default': {
+          default: {
             $ref: `${url}/default`,
           },
         },
@@ -2225,7 +2373,7 @@ describe('create-workspace-store', () => {
                             },
                             type: 'object',
                           },
-                          '$ref': '#/components/schemas/User',
+                          $ref: '#/components/schemas/User',
                         },
                         type: 'array',
                       },
@@ -2345,7 +2493,7 @@ describe('create-workspace-store', () => {
                     'application/json': {
                       schema: {
                         items: {
-                          '$ref': '#/components/schemas/User',
+                          $ref: '#/components/schemas/User',
                           '$ref-value': {
                             properties: {
                               email: {
