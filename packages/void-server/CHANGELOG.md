@@ -1,5 +1,11 @@
 # @scalar/void-server
 
+## 2.2.2
+
+### Patch Changes
+
+- 714b197: feat: support base64 unicode characters
+
 ## 2.2.1
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @scalar/components
 
+## 0.14.28
+
+### Patch Changes
+
+- f918582: feat(api-reference, components): update scalar floating components contraints
+- Updated dependencies [714b197]
+- Updated dependencies [2b22eab]
+  - @scalar/oas-utils@0.4.23
+  - @scalar/themes@0.13.15
+  - @scalar/code-highlight@0.1.9
+
 ## 0.14.27
 
 ### Patch Changes

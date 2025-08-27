@@ -1,5 +1,19 @@
 # @scalar/api-client
 
+## 2.5.27
+
+### Patch Changes
+
+- 714b197: feat: support base64 unicode characters
+- Updated dependencies [714b197]
+- Updated dependencies [f918582]
+- Updated dependencies [2b22eab]
+  - @scalar/oas-utils@0.4.23
+  - @scalar/components@0.14.28
+  - @scalar/themes@0.13.15
+  - @scalar/postman-to-openapi@0.3.26
+  - @scalar/use-codemirror@0.12.29
+
 ## 2.5.26
 
 ### Patch Changes

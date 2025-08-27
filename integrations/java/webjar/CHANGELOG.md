@@ -1,5 +1,18 @@
 # @scalar/webjar
 
+## 0.2.0
+
+### Minor Changes
+
+- a6a1004: Added support for the "sources" field
+
+### Patch Changes
+
+- Updated dependencies [714b197]
+- Updated dependencies [f918582]
+- Updated dependencies [d5c1d0c]
+  - @scalar/api-reference@1.34.7
+
 ## 0.1.4
 
 ### Patch Changes

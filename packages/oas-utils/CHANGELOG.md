@@ -1,5 +1,13 @@
 # @scalar/oas-utils
 
+## 0.4.23
+
+### Patch Changes
+
+- 714b197: feat: support base64 unicode characters
+- Updated dependencies [2b22eab]
+  - @scalar/themes@0.13.15
+
 ## 0.4.22
 
 ### Patch Changes

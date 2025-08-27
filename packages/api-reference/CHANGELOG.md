@@ -1,5 +1,21 @@
 # @scalar/api-reference
 
+## 1.34.7
+
+### Patch Changes
+
+- 714b197: feat: support base64 unicode characters
+- f918582: feat(api-reference, components): update scalar floating components contraints
+- d5c1d0c: feat(api-reference): custom display for webhook request examples
+- Updated dependencies [714b197]
+- Updated dependencies [f918582]
+- Updated dependencies [2b22eab]
+  - @scalar/api-client@2.5.27
+  - @scalar/oas-utils@0.4.23
+  - @scalar/components@0.14.28
+  - @scalar/themes@0.13.15
+  - @scalar/code-highlight@0.1.9
+
 ## 1.34.6
 
 ### Patch Changes
